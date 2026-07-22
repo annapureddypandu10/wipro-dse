@@ -1,0 +1,149 @@
+-- =====================================================
+-- USING SINGLE ROW FUNCTIONS
+-- =====================================================
+
+-- 1. Display the current date. Label the column Date.
+
+SELECT SYSDATE AS "DATE"
+FROM DUAL;
+
+-- =====================================================
+
+-- 2. Employee number, name, salary and salary increased by 15.5%
+
+SELECT EMPNO,
+       ENAME,
+       SAL,
+       ROUND(SAL*1.155) AS "NEW SALARY"
+FROM EMP;
+
+-- =====================================================
+
+-- 3. Display increase in salary
+
+SELECT EMPNO,
+       ENAME,
+       SAL,
+       ROUND(SAL*1.155) AS "NEW SALARY",
+       ROUND((SAL*1.155)-SAL) AS "INCREASE"
+FROM EMP;
+
+-- =====================================================
+
+-- 4. Display employee names with first letter capital,
+-- length of name whose name starts with J, A or M
+
+SELECT INITCAP(LOWER(ENAME)) AS "EMPLOYEE NAME",
+       LENGTH(ENAME) AS "NAME LENGTH"
+FROM EMP
+WHERE ENAME LIKE 'J%'
+   OR ENAME LIKE 'A%'
+   OR ENAME LIKE 'M%'
+ORDER BY ENAME;
+
+-- =====================================================
+
+-- 5. Prompt user for first letter
+
+ACCEPT LETTER CHAR PROMPT 'Enter First Letter : '
+
+SELECT ENAME
+FROM EMP
+WHERE ENAME LIKE UPPER('&LETTER')||'%';
+
+-- =====================================================
+
+-- 6. Months worked by employee
+
+SELECT ENAME,
+       CEIL(MONTHS_BETWEEN(SYSDATE,HIREDATE)) AS MONTHS_WORKED
+FROM EMP
+ORDER BY MONTHS_WORKED;
+
+-- =====================================================
+
+-- 7. Dream Salaries
+
+SELECT ENAME||' earns '||
+       TO_CHAR(SAL,'99999')||
+       ' monthly but wants '||
+       TO_CHAR(SAL*3,'999999')
+       AS "DREAM SALARIES"
+FROM EMP;
+
+-- =====================================================
+
+-- 8. Salary left padded with $
+
+SELECT ENAME,
+       LPAD(SAL,15,'$') AS SALARY
+FROM EMP;
+
+-- =====================================================
+
+-- 9. Salary Review Date
+
+SELECT ENAME,
+       HIREDATE,
+       NEXT_DAY(ADD_MONTHS(HIREDATE,6),'MONDAY') AS REVIEW
+FROM EMP;
+
+-- =====================================================
+
+-- 10. Day employee joined
+
+SELECT ENAME,
+       HIREDATE,
+       TO_CHAR(HIREDATE,'DAY') AS DAY
+FROM EMP
+ORDER BY TO_CHAR(HIREDATE,'D');
+
+-- =====================================================
+
+-- 11. Display commission or No Commission
+
+SELECT ENAME,
+       NVL(TO_CHAR(COMM),'No Commission') AS COMM
+FROM EMP;
+
+-- =====================================================
+
+-- 12. First 8 characters of employee name and salary in stars
+
+SELECT SUBSTR(ENAME,1,8)||' '||
+       RPAD('*',TRUNC(SAL/1000),'*')
+       AS EMPLOYEES_AND_THEIR_SALARIES
+FROM EMP
+ORDER BY SAL DESC;
+
+-- =====================================================
+
+-- 13. Using DECODE
+
+SELECT ENAME,
+       JOB,
+       DECODE(JOB,
+              'PRESIDENT','A',
+              'MANAGER','B',
+              'SALESMAN','C',
+              'CLERK','D',
+              'OTHER')
+       AS GRADE
+FROM EMP;
+
+-- =====================================================
+
+-- 14. Using CASE
+
+SELECT ENAME,
+       JOB,
+       CASE
+           WHEN JOB='PRESIDENT' THEN 'A'
+           WHEN JOB='MANAGER' THEN 'B'
+           WHEN JOB='SALESMAN' THEN 'C'
+           WHEN JOB='CLERK' THEN 'D'
+           ELSE 'OTHER'
+       END AS GRADE
+FROM EMP;
+
+-- =====================================================
