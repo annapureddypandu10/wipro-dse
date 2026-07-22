@@ -1,0 +1,165 @@
+-- ==========================================================
+-- RESTRICTING AND SORTING DATA
+-- ==========================================================
+
+-- 1. Display ENAME, SAL, COMM of employees who earn commission.
+-- Sort by Salary and Commission in descending order.
+
+SELECT ENAME,SAL,COMM
+FROM EMP
+WHERE COMM IS NOT NULL
+ORDER BY 2 DESC,3 DESC;
+
+-- ==========================================================
+
+-- 2. Display all unique job codes.
+
+SELECT DISTINCT JOB
+FROM EMP;
+
+-- ==========================================================
+
+-- 3. Display descriptive column headings.
+
+SELECT EMPNO AS "Emp #",
+       ENAME AS "Employee",
+       JOB AS "Job",
+       HIREDATE AS "Hire Date"
+FROM EMP;
+
+-- ==========================================================
+
+-- 4. Display employee name concatenated with job.
+
+SELECT ENAME||', '||JOB AS "Employee and Title"
+FROM EMP;
+
+-- ==========================================================
+
+-- 5. Display all data separated by commas.
+
+SELECT EMPNO||','||
+       ENAME||','||
+       JOB||','||
+       TO_CHAR(HIREDATE,'DD-MON-YYYY')||','||
+       MGR
+AS THE_OUTPUT
+FROM EMP;
+
+-- ==========================================================
+
+-- 6. Display SCOTT and TURNER details ordered by hire date.
+
+SELECT ENAME,
+       JOB,
+       HIREDATE
+FROM EMP
+WHERE ENAME IN ('SCOTT','TURNER')
+ORDER BY HIREDATE;
+
+-- ==========================================================
+
+-- 7. Display employees in department 20 or 30.
+
+SELECT ENAME,
+       DEPTNO
+FROM EMP
+WHERE DEPTNO IN (20,30)
+ORDER BY ENAME;
+
+-- ==========================================================
+
+-- 8. Employees earning between 2000 and 3000 in dept 20 or 30.
+
+SELECT ENAME AS "Employee",
+       SAL AS "Monthly Salary"
+FROM EMP
+WHERE SAL BETWEEN 2000 AND 3000
+AND DEPTNO IN (20,30);
+
+-- ==========================================================
+
+-- 9. Employees hired in 1981.
+
+SELECT ENAME,
+       HIREDATE
+FROM EMP
+WHERE TO_CHAR(HIREDATE,'YYYY')='1981';
+
+-- ==========================================================
+
+-- 10. Prompt salary.
+
+ACCEPT AMT NUMBER PROMPT 'Enter Salary : '
+
+SELECT ENAME,
+       SAL
+FROM EMP
+WHERE SAL>&AMT;
+
+-- ==========================================================
+
+-- 11. Employees without manager.
+
+SELECT ENAME,
+       JOB
+FROM EMP
+WHERE MGR IS NULL;
+
+-- ==========================================================
+
+-- 12. Prompt Manager ID and Sort Column.
+
+ACCEPT MID NUMBER PROMPT 'Enter Manager ID : '
+ACCEPT COL CHAR PROMPT 'Enter Column (EMPNO/ENAME/SAL/DEPTNO): '
+
+SELECT EMPNO,
+       ENAME,
+       SAL,
+       DEPTNO
+FROM EMP
+WHERE MGR=&MID
+ORDER BY &COL;
+
+-- ==========================================================
+
+-- 13. Prompt manager and sort.
+
+ACCEPT MGRNO NUMBER PROMPT 'Enter Manager Number : '
+ACCEPT SORTCOL CHAR PROMPT 'Enter Sort Column : '
+
+SELECT EMPNO,
+       ENAME,
+       SAL,
+       DEPTNO
+FROM EMP
+WHERE MGR=&MGRNO
+ORDER BY &SORTCOL;
+
+-- ==========================================================
+
+-- 14. Third letter is A.
+
+SELECT ENAME
+FROM EMP
+WHERE ENAME LIKE '__A%';
+
+-- ==========================================================
+
+-- 15. Name contains both A and S.
+
+SELECT ENAME
+FROM EMP
+WHERE ENAME LIKE '%A%'
+AND ENAME LIKE '%S%';
+
+-- ==========================================================
+
+-- 16. Clerks earning 800 or 950 or 1300.
+
+SELECT ENAME,
+       JOB,
+       SAL
+FROM EMP
+WHERE JOB='CLERK'
+AND SAL IN (800,950,1300);
