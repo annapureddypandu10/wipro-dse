@@ -1,0 +1,327 @@
+/*===========================================================
+     HANDS-ON ASSIGNMENTS - JOINS
+     TABLES USED : EMP, DEPT, SALGRADE
+=============================================================*/
+
+
+/*-----------------------------------------------------------
+ASSIGNMENT 1
+Write a query to display EMPNO, ENAME, SAL, DNAME and LOC
+using NATURAL JOIN.
+-----------------------------------------------------------*/
+
+SELECT EMPNO, ENAME, SAL, DNAME, LOC
+FROM EMP
+NATURAL JOIN DEPT;
+
+/*
+
+OUTPUT
+
+EMPNO ENAME  SAL   DNAME        LOC
+----- ------ ----- ------------ ----------
+7369  SMITH   800  RESEARCH     DALLAS
+7499  ALLEN  1600  SALES        CHICAGO
+7521  WARD   1250  SALES        CHICAGO
+7566  JONES  2975  RESEARCH     DALLAS
+7654  MARTIN 1250  SALES        CHICAGO
+7698  BLAKE  2850  SALES        CHICAGO
+7782  CLARK  2450  ACCOUNTING   NEW YORK
+7788  SCOTT  3000  RESEARCH     DALLAS
+7839  KING   5000  ACCOUNTING   NEW YORK
+7844  TURNER 1500  SALES        CHICAGO
+7876  ADAMS  1100  RESEARCH     DALLAS
+7900  JAMES   950  SALES        CHICAGO
+7902  FORD   3000  RESEARCH     DALLAS
+7934  MILLER 1300  ACCOUNTING   NEW YORK
+
+*/
+
+
+/*-----------------------------------------------------------
+ASSIGNMENT 2
+Display JOB,MGR,SAL,COMM,DNAME
+whose JOB is SALESMAN.
+-----------------------------------------------------------*/
+
+SELECT E.JOB,E.MGR,E.SAL,E.COMM,D.DNAME
+FROM EMP E
+JOIN DEPT D
+ON E.DEPTNO=D.DEPTNO
+WHERE JOB='SALESMAN';
+
+/*
+
+JOB        MGR   SAL COMM DNAME
+---------- ---- ---- ---- -------
+SALESMAN   7698 1600 300  SALES
+SALESMAN   7698 1250 500  SALES
+SALESMAN   7698 1250 1400 SALES
+SALESMAN   7698 1500 0    SALES
+
+*/
+
+
+/*-----------------------------------------------------------
+ASSIGNMENT 3
+Employees working in DALLAS.
+-----------------------------------------------------------*/
+
+SELECT ENAME,JOB,E.DEPTNO,DNAME
+FROM EMP E
+JOIN DEPT D
+ON E.DEPTNO=D.DEPTNO
+WHERE LOC='DALLAS';
+
+/*
+
+ENAME JOB      DEPTNO DNAME
+----- -------- ------ ----------
+SMITH CLERK      20   RESEARCH
+JONES MANAGER    20   RESEARCH
+SCOTT ANALYST    20   RESEARCH
+ADAMS CLERK      20   RESEARCH
+FORD  ANALYST    20   RESEARCH
+
+*/
+
+
+/*-----------------------------------------------------------
+ASSIGNMENT 4
+Employee and Manager Details.
+-----------------------------------------------------------*/
+
+SELECT E.ENAME "Employee",
+E.EMPNO "Emp#",
+M.ENAME "Manager",
+M.EMPNO "Mgr#"
+FROM EMP E
+JOIN EMP M
+ON E.MGR=M.EMPNO;
+
+/*
+
+Employee Emp# Manager Mgr#
+-------- ---- ------- ----
+SMITH    7369 FORD    7902
+ALLEN    7499 BLAKE   7698
+WARD     7521 BLAKE   7698
+...
+
+*/
+
+
+/*-----------------------------------------------------------
+ASSIGNMENT 5
+Display all employees including KING.
+-----------------------------------------------------------*/
+
+SELECT E.ENAME "Employee",
+E.EMPNO "Emp#",
+M.ENAME "Manager",
+M.EMPNO "Mgr#"
+FROM EMP E
+LEFT OUTER JOIN EMP M
+ON E.MGR=M.EMPNO
+ORDER BY E.EMPNO;
+
+/*
+
+KING will appear with NULL Manager.
+
+*/
+
+
+/*-----------------------------------------------------------
+ASSIGNMENT 6
+Display Structure of SALGRADE.
+-----------------------------------------------------------*/
+
+DESC SALGRADE;
+
+/*
+
+Name      Type
+--------- -------
+GRADE     NUMBER
+LOSAL     NUMBER
+HISAL     NUMBER
+
+*/
+
+
+/*-----------------------------------------------------------
+Display Name,Job,Department,Salary and Grade.
+-----------------------------------------------------------*/
+
+SELECT E.ENAME,
+E.JOB,
+D.DNAME,
+E.SAL,
+S.GRADE
+FROM EMP E
+JOIN DEPT D
+ON E.DEPTNO=D.DEPTNO
+JOIN SALGRADE S
+ON E.SAL BETWEEN S.LOSAL AND S.HISAL;
+
+/*
+
+ENAME JOB DNAME SAL GRADE
+----- ---- ----- ---- -----
+SMITH CLERK RESEARCH 800 1
+ALLEN SALESMAN SALES 1600 3
+...
+KING PRESIDENT ACCOUNTING 5000 5
+
+*/
+
+
+/*-----------------------------------------------------------
+ASSIGNMENT 7
+Display employee names and department names.
+Also departments without employees.
+-----------------------------------------------------------*/
+
+SELECT E.ENAME,D.DNAME
+FROM EMP E
+RIGHT OUTER JOIN DEPT D
+ON E.DEPTNO=D.DEPTNO;
+
+/*
+
+Department OPERATIONS appears with NULL employee.
+
+*/
+
+
+/*-----------------------------------------------------------
+ASSIGNMENT 8
+Employees hired before their managers.
+-----------------------------------------------------------*/
+
+SELECT E.ENAME,
+E.HIREDATE,
+M.ENAME MANAGER,
+M.HIREDATE
+FROM EMP E
+LEFT JOIN EMP M
+ON E.MGR=M.EMPNO
+WHERE E.HIREDATE<M.HIREDATE;
+
+/*
+
+ENAME HIREDATE MANAGER HIREDATE
+----- -------- ------- --------
+Only employees hired before managers.
+
+*/
+
+
+/*-----------------------------------------------------------
+ASSIGNMENT 9
+Using USING clause.
+-----------------------------------------------------------*/
+
+SELECT EMPNO,
+ENAME,
+DNAME,
+LOC
+FROM EMP
+JOIN DEPT
+USING(DEPTNO)
+WHERE JOB='CLERK';
+
+/*
+
+Displays all Clerks.
+
+*/
+
+
+/*-----------------------------------------------------------
+ASSIGNMENT 10
+Using ON clause.
+-----------------------------------------------------------*/
+
+SELECT ENAME,
+SAL,
+MGR,
+DNAME
+FROM EMP
+JOIN DEPT
+ON EMP.DEPTNO=DEPT.DEPTNO
+WHERE SAL>2000;
+
+/*
+
+Displays employees earning >2000.
+
+*/
+
+
+/*-----------------------------------------------------------
+ASSIGNMENT 11
+LEFT OUTER JOIN
+-----------------------------------------------------------*/
+
+SELECT EMPNO,
+ENAME,
+JOB,
+EMP.DEPTNO,
+DNAME,
+LOC
+FROM EMP
+LEFT OUTER JOIN DEPT
+ON EMP.DEPTNO=DEPT.DEPTNO;
+
+/*
+
+Displays all employees.
+
+*/
+
+
+/*-----------------------------------------------------------
+ASSIGNMENT 12
+RIGHT OUTER JOIN
+-----------------------------------------------------------*/
+
+SELECT ENAME,
+DNAME
+FROM EMP
+RIGHT OUTER JOIN DEPT
+ON EMP.DEPTNO=DEPT.DEPTNO;
+
+/*
+
+Displays all departments including OPERATIONS.
+
+*/
+
+
+/*-----------------------------------------------------------
+ASSIGNMENT 13
+FULL OUTER JOIN
+-----------------------------------------------------------*/
+
+SELECT EMPNO,
+DNAME,
+LOC
+FROM EMP
+FULL OUTER JOIN DEPT
+ON EMP.DEPTNO=DEPT.DEPTNO;
+
+/*
+
+Displays all employees and all departments.
+
+Department 40 (OPERATIONS)
+appears with NULL EMPNO.
+
+*/
+
+
+/*===========================================================
+END OF JOINS ASSIGNMENTS
+=============================================================*/
