@@ -1,0 +1,767 @@
+====================================================================
+ 1
+Create Package PK1 with the following:
+
+1. Procedure ADD_DEPT
+2. Procedure UPDATE_DEPT
+3. Procedure DELETE_DEPT
+4. Local Function CAL_CNT
+
+Use CAL_CNT in all the procedures.
+
+Create a One-Time Procedure to display the total number
+of departments.
+====================================================================
+
+Step 1 : Package Specification
+------------------------------
+
+sql> CREATE OR REPLACE PACKAGE PK1
+IS
+
+PROCEDURE ADD_DEPT
+(
+DNO NUMBER,
+NAME VARCHAR2,
+LO VARCHAR2
+);
+
+PROCEDURE UPDATE_DEPT
+(
+DNO NUMBER,
+NAME VARCHAR2,
+LO VARCHAR2
+);
+
+PROCEDURE DELETE_DEPT
+(
+DNO NUMBER
+);
+
+END PK1;
+/
+
+Output:
+-------
+
+Package created.
+
+
+====================================================================
+Step 2 : Package Body
+====================================================================
+
+sql> CREATE OR REPLACE PACKAGE BODY PK1
+IS
+
+------------------------------------------------------------------
+-- Local Function
+------------------------------------------------------------------
+
+FUNCTION CAL_CNT
+(
+P_DEPTNO NUMBER
+)
+RETURN BOOLEAN
+IS
+
+V_COUNT NUMBER;
+
+BEGIN
+
+SELECT COUNT(*)
+INTO V_COUNT
+FROM DEPT
+WHERE DEPTNO=P_DEPTNO;
+
+IF V_COUNT=0 THEN
+RETURN TRUE;
+ELSE
+RETURN FALSE;
+END IF;
+
+END CAL_CNT;
+
+------------------------------------------------------------------
+-- Procedure ADD_DEPT
+------------------------------------------------------------------
+
+PROCEDURE ADD_DEPT
+(
+DNO NUMBER,
+NAME VARCHAR2,
+LO VARCHAR2
+)
+IS
+BEGIN
+
+IF CAL_CNT(DNO) THEN
+
+INSERT INTO DEPT
+VALUES(DNO,NAME,LO);
+
+COMMIT;
+
+DBMS_OUTPUT.PUT_LINE
+('Department Inserted.');
+
+ELSE
+
+DBMS_OUTPUT.PUT_LINE
+('Duplicate Department Number.');
+
+END IF;
+
+END ADD_DEPT;
+
+------------------------------------------------------------------
+-- Procedure UPDATE_DEPT
+------------------------------------------------------------------
+
+PROCEDURE UPDATE_DEPT
+(
+DNO NUMBER,
+NAME VARCHAR2,
+LO VARCHAR2
+)
+IS
+BEGIN
+
+IF NOT CAL_CNT(DNO) THEN
+
+UPDATE DEPT
+SET DNAME=NAME,
+LOC=LO
+WHERE DEPTNO=DNO;
+
+COMMIT;
+
+DBMS_OUTPUT.PUT_LINE
+('Department Updated.');
+
+ELSE
+
+DBMS_OUTPUT.PUT_LINE
+('Department Number Not Found.');
+
+END IF;
+
+END UPDATE_DEPT;
+
+------------------------------------------------------------------
+-- Procedure DELETE_DEPT
+------------------------------------------------------------------
+
+PROCEDURE DELETE_DEPT
+(
+DNO NUMBER
+)
+IS
+BEGIN
+
+IF NOT CAL_CNT(DNO) THEN
+
+DELETE FROM DEPT
+WHERE DEPTNO=DNO;
+
+COMMIT;
+
+DBMS_OUTPUT.PUT_LINE
+('Department Deleted.');
+
+ELSE
+
+DBMS_OUTPUT.PUT_LINE
+('Department Number Not Found.');
+
+END IF;
+
+END DELETE_DEPT;
+
+END PK1;
+/
+
+Output:
+-------
+
+Package body created.
+
+
+====================================================================
+Step 3 : One-Time Procedure
+Display Total Number of Departments
+====================================================================
+
+sql> CREATE OR REPLACE PROCEDURE DISP_DEPT_COUNT
+IS
+
+V_COUNT NUMBER;
+
+BEGIN
+
+SELECT COUNT(*)
+INTO V_COUNT
+FROM DEPT;
+
+DBMS_OUTPUT.PUT_LINE
+('Total Departments = '||V_COUNT);
+
+END;
+/
+
+Output:
+-------
+
+Procedure created.
+
+
+====================================================================
+Execution
+====================================================================
+
+Insert Department
+-----------------
+
+sql> EXEC PK1.ADD_DEPT(50,'HR','HYDERABAD');
+
+Output:
+-------
+
+Department Inserted.
+
+PL/SQL procedure successfully completed.
+
+
+--------------------------------------------------------------------
+
+Update Department
+-----------------
+
+sql> EXEC PK1.UPDATE_DEPT
+(
+50,
+'FINANCE',
+'MUMBAI'
+);
+
+Output:
+-------
+
+Department Updated.
+
+PL/SQL procedure successfully completed.
+
+
+--------------------------------------------------------------------
+
+Delete Department
+-----------------
+
+sql> EXEC PK1.DELETE_DEPT(50);
+
+Output:
+-------
+
+Department Deleted.
+
+PL/SQL procedure successfully completed.
+
+
+--------------------------------------------------------------------
+
+Display Department Count
+------------------------
+
+sql> EXEC DISP_DEPT_COUNT;
+
+Output:
+-------
+
+Total Departments = 4
+
+PL/SQL procedure successfully completed.
+
+
+====================================================================
+Verification
+====================================================================
+
+sql> SELECT *
+FROM DEPT;
+
+Output:
+-------
+
+DEPTNO   DNAME        LOC
+------   ----------   ----------
+10       ACCOUNTING   NEW YORK
+20       RESEARCH     DALLAS
+30       SALES        CHICAGO
+40       OPERATIONS   BOSTON
+
+4 rows selected.
+
+====================================================================
+ 2
+Create a Package PK2 that contains two procedures:
+
+1. DISP_FIRST3
+   - Displays the first 3 employees from EMP table.
+
+2. DISP_FIRST6
+   - Displays the first 6 employees from EMP table.
+
+Use one Global Cursor in the Package.
+====================================================================
+
+Step 1 : Package Specification
+------------------------------
+
+sql> SET SERVEROUTPUT ON;
+
+sql> CREATE OR REPLACE PACKAGE PK2
+IS
+
+PROCEDURE DISP_FIRST3;
+
+PROCEDURE DISP_FIRST6;
+
+END PK2;
+/
+
+Output:
+-------
+
+Package created.
+
+
+====================================================================
+Step 2 : Package Body
+====================================================================
+
+sql> CREATE OR REPLACE PACKAGE BODY PK2
+IS
+
+------------------------------------------------------------------
+-- Global Cursor
+------------------------------------------------------------------
+
+CURSOR C1 IS
+SELECT EMPNO,
+       ENAME,
+       JOB,
+       SAL
+FROM EMP
+ORDER BY EMPNO;
+
+------------------------------------------------------------------
+-- Procedure DISP_FIRST3
+------------------------------------------------------------------
+
+PROCEDURE DISP_FIRST3
+IS
+
+V_REC C1%ROWTYPE;
+V_COUNT NUMBER:=0;
+
+BEGIN
+
+OPEN C1;
+
+LOOP
+
+FETCH C1 INTO V_REC;
+
+EXIT WHEN C1%NOTFOUND OR V_COUNT=3;
+
+DBMS_OUTPUT.PUT_LINE
+(
+V_REC.EMPNO||'  '||
+V_REC.ENAME||'  '||
+V_REC.JOB||'  '||
+V_REC.SAL
+);
+
+V_COUNT:=V_COUNT+1;
+
+END LOOP;
+
+CLOSE C1;
+
+END DISP_FIRST3;
+
+------------------------------------------------------------------
+-- Procedure DISP_FIRST6
+------------------------------------------------------------------
+
+PROCEDURE DISP_FIRST6
+IS
+
+V_REC C1%ROWTYPE;
+V_COUNT NUMBER:=0;
+
+BEGIN
+
+OPEN C1;
+
+LOOP
+
+FETCH C1 INTO V_REC;
+
+EXIT WHEN C1%NOTFOUND OR V_COUNT=6;
+
+DBMS_OUTPUT.PUT_LINE
+(
+V_REC.EMPNO||'  '||
+V_REC.ENAME||'  '||
+V_REC.JOB||'  '||
+V_REC.SAL
+);
+
+V_COUNT:=V_COUNT+1;
+
+END LOOP;
+
+CLOSE C1;
+
+END DISP_FIRST6;
+
+END PK2;
+/
+
+Output:
+-------
+
+Package body created.
+
+
+====================================================================
+Execution
+====================================================================
+
+Display First 3 Employees
+-------------------------
+
+sql> EXEC PK2.DISP_FIRST3;
+
+Output:
+-------
+
+7369  SMITH   CLERK      800
+7499  ALLEN   SALESMAN   1600
+7521  WARD    SALESMAN   1250
+
+PL/SQL procedure successfully completed.
+
+
+--------------------------------------------------------------------
+
+Display First 6 Employees
+-------------------------
+
+sql> EXEC PK2.DISP_FIRST6;
+
+Output:
+-------
+
+7369  SMITH   CLERK      800
+7499  ALLEN   SALESMAN   1600
+7521  WARD    SALESMAN   1250
+7566  JONES   MANAGER    2975
+7654  MARTIN  SALESMAN   1250
+7698  BLAKE   MANAGER    2850
+
+PL/SQL procedure successfully completed.
+
+
+====================================================================
+Verification
+====================================================================
+
+sql> SELECT EMPNO,
+            ENAME,
+            JOB,
+            SAL
+     FROM EMP
+     ORDER BY EMPNO;
+
+Output:
+-------
+
+EMPNO  ENAME   JOB        SAL
+-----  ------  ---------  ----
+7369   SMITH   CLERK       800
+7499   ALLEN   SALESMAN   1600
+7521   WARD    SALESMAN   1250
+7566   JONES   MANAGER    2975
+7654   MARTIN  SALESMAN   1250
+7698   BLAKE   MANAGER    2850
+7782   CLARK   MANAGER    2450
+7788   SCOTT   ANALYST    3000
+7839   KING    PRESIDENT  5000
+7844   TURNER  SALESMAN   1500
+7876   ADAMS   CLERK      1100
+7900   JAMES   CLERK       950
+7902   FORD    ANALYST    3000
+7934   MILLER  CLERK      1300
+
+14 rows selected.
+
+====================================================================
+====================================================================
+3
+Create a Sequence S2 starting with 1 and increment by 1.
+
+Create a Package PK3 with two overloaded procedures ADD_EMP.
+
+Procedure 1:
+-------------
+Accepts:
+EMPNO,
+ENAME DEFAULT 'UNK',
+SAL DEFAULT 1000
+
+Insert the values into EMP table.
+
+Procedure 2:
+-------------
+Accepts:
+ENAME DEFAULT 'UNK',
+SAL DEFAULT 1000
+
+Generate EMPNO using Sequence S2 and insert the values into
+EMP table.
+====================================================================
+
+====================================================================
+Step 1 : Create Sequence S2
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE SEQUENCE S2
+     START WITH 1
+     INCREMENT BY 1;
+
+Output:
+-------
+
+Sequence created.
+
+
+====================================================================
+Step 2 : Package Specification
+====================================================================
+
+sql> CREATE OR REPLACE PACKAGE PK3
+IS
+
+PROCEDURE ADD_EMP
+(
+EMPNO NUMBER,
+ENAME VARCHAR2 DEFAULT 'UNK',
+SAL NUMBER DEFAULT 1000
+);
+
+PROCEDURE ADD_EMP
+(
+ENAME VARCHAR2 DEFAULT 'UNK',
+SAL NUMBER DEFAULT 1000
+);
+
+END PK3;
+/
+
+Output:
+-------
+
+Package created.
+
+
+====================================================================
+Step 3 : Package Body
+====================================================================
+
+sql> CREATE OR REPLACE PACKAGE BODY PK3
+IS
+
+------------------------------------------------------------------
+-- Procedure 1
+------------------------------------------------------------------
+
+PROCEDURE ADD_EMP
+(
+EMPNO NUMBER,
+ENAME VARCHAR2 DEFAULT 'UNK',
+SAL NUMBER DEFAULT 1000
+)
+IS
+BEGIN
+
+INSERT INTO EMP
+(
+EMPNO,
+ENAME,
+SAL
+)
+VALUES
+(
+EMPNO,
+ENAME,
+SAL
+);
+
+COMMIT;
+
+DBMS_OUTPUT.PUT_LINE
+('Employee Inserted.');
+
+EXCEPTION
+
+WHEN DUP_VAL_ON_INDEX THEN
+
+DBMS_OUTPUT.PUT_LINE
+('Duplicate Employee Number.');
+
+WHEN OTHERS THEN
+
+DBMS_OUTPUT.PUT_LINE(SQLERRM);
+
+END ADD_EMP;
+
+------------------------------------------------------------------
+-- Procedure 2
+------------------------------------------------------------------
+
+PROCEDURE ADD_EMP
+(
+ENAME VARCHAR2 DEFAULT 'UNK',
+SAL NUMBER DEFAULT 1000
+)
+IS
+
+V_EMPNO NUMBER;
+
+BEGIN
+
+SELECT S2.NEXTVAL
+INTO V_EMPNO
+FROM DUAL;
+
+INSERT INTO EMP
+(
+EMPNO,
+ENAME,
+SAL
+)
+VALUES
+(
+V_EMPNO,
+ENAME,
+SAL
+);
+
+COMMIT;
+
+DBMS_OUTPUT.PUT_LINE
+('Employee Inserted. EMPNO = '||V_EMPNO);
+
+EXCEPTION
+
+WHEN OTHERS THEN
+
+DBMS_OUTPUT.PUT_LINE(SQLERRM);
+
+END ADD_EMP;
+
+END PK3;
+/
+
+Output:
+-------
+
+Package body created.
+
+
+====================================================================
+Execution
+====================================================================
+
+Method 1
+--------
+
+sql> EXEC PK3.ADD_EMP
+(
+9001,
+'JOHN',
+25000
+);
+
+Output:
+-------
+
+Employee Inserted.
+
+PL/SQL procedure successfully completed.
+
+
+--------------------------------------------------------------------
+
+Method 2
+--------
+
+sql> EXEC PK3.ADD_EMP
+(
+'DAVID',
+18000
+);
+
+Output:
+-------
+
+Employee Inserted.
+EMPNO = 1
+
+PL/SQL procedure successfully completed.
+
+
+--------------------------------------------------------------------
+
+Using Default Parameters
+------------------------
+
+sql> EXEC PK3.ADD_EMP;
+
+Output:
+-------
+
+Employee Inserted.
+EMPNO = 2
+
+PL/SQL procedure successfully completed.
+
+
+====================================================================
+Verification
+====================================================================
+
+sql> SELECT EMPNO,
+            ENAME,
+            SAL
+     FROM EMP
+     WHERE EMPNO IN (1,2,9001)
+     ORDER BY EMPNO;
+
+Output:
+-------
+
+EMPNO  ENAME   SAL
+-----  ------  -----
+1      DAVID   18000
+2      UNK      1000
+9001   JOHN    25000
+
+3 rows selected.
+
+====================================================================
