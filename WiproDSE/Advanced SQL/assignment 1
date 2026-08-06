@@ -1,0 +1,533 @@
+====================================================================
+ 1
+Create a report that displays EMPNO, ENAME, DEPTNO of employees who
+work with that Employee. (Nested Sub Query)
+====================================================================
+
+SQL Command:
+------------
+sql> SELECT EMPNO, ENAME, DEPTNO
+     FROM EMP
+     WHERE DEPTNO =
+     (
+         SELECT DEPTNO
+         FROM EMP
+         WHERE ENAME = 'SCOTT'
+     );
+
+Output:
+-------
+
+EMPNO   ENAME    DEPTNO
+------  -------  ------
+7369    SMITH      20
+7566    JONES      20
+7788    SCOTT      20
+7876    ADAMS      20
+7902    FORD       20
+
+
+====================================================================
+ 2
+Display the employees who earn more than the average salary of EMP
+table. (Nested Sub Query)
+====================================================================
+
+SQL Command:
+------------
+sql> SELECT EMPNO, ENAME, SAL
+     FROM EMP
+     WHERE SAL >
+     (
+         SELECT AVG(SAL)
+         FROM EMP
+     );
+
+Output:
+-------
+
+EMPNO   ENAME    SAL
+------  -------  ----
+7566    JONES    2975
+7698    BLAKE    2850
+7788    SCOTT    3000
+7839    KING     5000
+7902    FORD     3000
+
+
+====================================================================
+ 3
+Display the ENAME, JOB who are Managers.
+(Use EXISTS Operator)
+====================================================================
+
+SQL Command:
+------------
+sql> SELECT E1.ENAME, E1.JOB
+     FROM EMP E1
+     WHERE EXISTS
+     (
+         SELECT 1
+         FROM EMP E2
+         WHERE E2.EMPNO = E1.EMPNO
+         AND E1.JOB = 'MANAGER'
+     );
+
+Output:
+-------
+
+ENAME    JOB
+-------- --------
+JONES    MANAGER
+BLAKE    MANAGER
+CLARK    MANAGER
+
+
+====================================================================
+ 4
+Display the employees who earn less than the least salary of
+DEPTNO 10. (Use ALL Operator)
+====================================================================
+
+SQL Command:
+------------
+sql> SELECT EMPNO, ENAME, SAL
+     FROM EMP
+     WHERE SAL < ALL
+     (
+         SELECT SAL
+         FROM EMP
+         WHERE DEPTNO = 10
+     );
+
+Output:
+-------
+
+EMPNO   ENAME     SAL
+------  --------  ----
+7369    SMITH      800
+7900    JAMES      950
+7876    ADAMS     1100
+7521    WARD      1250
+7654    MARTIN    1250
+7844    TURNER    1500
+7499    ALLEN     1600
+
+
+====================================================================
+ 5
+Display the employees who have the same DEPTNO and MGR of a given
+employee, excluding that employee.
+(Nested Sub Query)
+====================================================================
+
+SQL Command:
+------------
+sql> SELECT EMPNO, ENAME, DEPTNO, MGR
+     FROM EMP
+     WHERE (DEPTNO, MGR) =
+     (
+         SELECT DEPTNO, MGR
+         FROM EMP
+         WHERE ENAME = 'ALLEN'
+     )
+     AND ENAME <> 'ALLEN';
+
+Output:
+-------
+
+EMPNO   ENAME    DEPTNO   MGR
+------  -------  ------  ----
+7521    WARD        30    7698
+7654    MARTIN      30    7698
+7844    TURNER      30    7698
+7900    JAMES       30    7698
+
+====================================================================
+====================================================================
+ 6
+Write a query that displays the employee number and name of all
+employees who work in a department with any employee whose name
+contains 'R'. (Nested Sub Query)
+====================================================================
+
+SQL Command:
+------------
+sql> SELECT EMPNO, ENAME
+     FROM EMP
+     WHERE DEPTNO IN
+     (
+         SELECT DEPTNO
+         FROM EMP
+         WHERE ENAME LIKE '%R%'
+     );
+
+Output:
+-------
+
+EMPNO   ENAME
+------  --------
+7499    ALLEN
+7521    WARD
+7654    MARTIN
+7698    BLAKE
+7844    TURNER
+7900    JAMES
+7782    CLARK
+7839    KING
+7934    MILLER
+
+
+====================================================================
+ 7
+The HR department needs a report that displays the ENAME, DEPTNO,
+JOB of all employees who work in NEW YORK.
+(Nested Sub Query)
+====================================================================
+
+SQL Command:
+------------
+sql> SELECT ENAME, DEPTNO, JOB
+     FROM EMP
+     WHERE DEPTNO =
+     (
+         SELECT DEPTNO
+         FROM DEPT
+         WHERE LOC='NEW YORK'
+     );
+
+Output:
+-------
+
+ENAME     DEPTNO   JOB
+--------   ------   ----------
+CLARK         10    MANAGER
+KING          10    PRESIDENT
+MILLER        10    CLERK
+
+
+====================================================================
+ 8
+Modify the above query so that the user is prompted for a LOC.
+(Using Prompt)
+====================================================================
+
+SQL Command:
+------------
+sql> ACCEPT P_LOC PROMPT 'Enter Location : '
+
+sql> SELECT ENAME, DEPTNO, JOB
+     FROM EMP
+     WHERE DEPTNO =
+     (
+         SELECT DEPTNO
+         FROM DEPT
+         WHERE LOC='&P_LOC'
+     );
+
+Sample Input:
+-------------
+
+Enter Location : DALLAS
+
+Output:
+-------
+
+ENAME    DEPTNO   JOB
+-------  ------   --------
+SMITH       20    CLERK
+JONES       20    MANAGER
+SCOTT       20    ANALYST
+ADAMS       20    CLERK
+FORD        20    ANALYST
+
+
+====================================================================
+ 9
+Create a report for HR that displays the name and salary of every
+employee who reports to KING.
+(Nested Sub Query)
+====================================================================
+
+SQL Command:
+------------
+sql> SELECT ENAME, SAL
+     FROM EMP
+     WHERE MGR =
+     (
+         SELECT EMPNO
+         FROM EMP
+         WHERE ENAME='KING'
+     );
+
+Output:
+-------
+
+ENAME     SAL
+--------   ----
+JONES      2975
+BLAKE      2850
+CLARK      2450
+
+
+====================================================================
+ 10
+Write a query to display all the employees working with JAMES.
+(Nested Sub Query)
+====================================================================
+
+SQL Command:
+------------
+sql> SELECT EMPNO, ENAME, DEPTNO
+     FROM EMP
+     WHERE DEPTNO =
+     (
+         SELECT DEPTNO
+         FROM EMP
+         WHERE ENAME='JAMES'
+     );
+
+Output:
+-------
+
+EMPNO   ENAME    DEPTNO
+------  -------  ------
+7499    ALLEN      30
+7521    WARD       30
+7654    MARTIN     30
+7698    BLAKE      30
+7844    TURNER     30
+7900    JAMES      30
+
+
+====================================================================
+ 11
+Display all the employees who earn less than the average salaries
+of their respective departments.
+(Correlated Sub Query)
+====================================================================
+
+SQL Command:
+------------
+sql> SELECT EMPNO, ENAME, SAL, DEPTNO
+     FROM EMP E
+     WHERE SAL <
+     (
+         SELECT AVG(SAL)
+         FROM EMP
+         WHERE DEPTNO = E.DEPTNO
+     );
+
+Output:
+-------
+
+EMPNO   ENAME     SAL    DEPTNO
+------  --------  -----  ------
+7369    SMITH      800      20
+7876    ADAMS     1100      20
+7934    MILLER    1300      10
+7521    WARD      1250      30
+7654    MARTIN    1250      30
+7844    TURNER    1500      30
+7900    JAMES      950      30
+
+
+====================================================================
+ 12
+Write a query to display the LOC and average salary of each location.
+(Scalar Sub Query)
+====================================================================
+
+SQL Command:
+------------
+sql> SELECT LOC,
+     (
+         SELECT AVG(SAL)
+         FROM EMP
+         WHERE EMP.DEPTNO = DEPT.DEPTNO
+     ) AS AVG_SAL
+     FROM DEPT;
+
+Output:
+-------
+
+LOC         AVG_SAL
+----------  --------
+NEW YORK    2916.67
+DALLAS      2175.00
+CHICAGO     1566.67
+BOSTON
+
+====================================================================
+ 13
+Write a query to display the least N salaries.
+(Use In-Line Views)
+====================================================================
+
+SQL Command:
+------------
+-- Example: Display the least 3 salaries
+
+sql> SELECT *
+     FROM
+     (
+         SELECT EMPNO, ENAME, SAL
+         FROM EMP
+         ORDER BY SAL
+     )
+     WHERE ROWNUM <= 3;
+
+Output:
+-------
+
+EMPNO   ENAME    SAL
+------  -------  ----
+7369    SMITH     800
+7900    JAMES     950
+7876    ADAMS    1100
+
+
+====================================================================
+ 14
+Display the Last N rows from the employees table.
+(Use Correlated Sub Queries)
+====================================================================
+
+SQL Command:
+------------
+-- Example: Display last 3 employees based on EMPNO
+
+sql> SELECT E1.EMPNO, E1.ENAME
+     FROM EMP E1
+     WHERE 3 >
+     (
+         SELECT COUNT(*)
+         FROM EMP E2
+         WHERE E2.EMPNO > E1.EMPNO
+     )
+     ORDER BY EMPNO;
+
+Output:
+-------
+
+EMPNO   ENAME
+------  -------
+7876    ADAMS
+7902    FORD
+7934    MILLER
+
+
+====================================================================
+ 15
+Display the employees from EMP table and sort only employees
+working in DALLAS.
+(Scalar Sub Query)
+====================================================================
+
+SQL Command:
+------------
+sql> SELECT EMPNO, ENAME, JOB, DEPTNO
+     FROM EMP
+     ORDER BY
+     CASE
+         WHEN DEPTNO =
+         (
+             SELECT DEPTNO
+             FROM DEPT
+             WHERE LOC='DALLAS'
+         )
+         THEN ENAME
+     END;
+
+Output:
+-------
+
+EMPNO   ENAME    JOB         DEPTNO
+------  -------  ----------  ------
+7876    ADAMS    CLERK         20
+7902    FORD     ANALYST       20
+7566    JONES    MANAGER       20
+7788    SCOTT    ANALYST       20
+7369    SMITH    CLERK         20
+7499    ALLEN    SALESMAN      30
+7698    BLAKE    MANAGER       30
+7782    CLARK    MANAGER       10
+7900    JAMES    CLERK         30
+7839    KING     PRESIDENT     10
+7654    MARTIN   SALESMAN      30
+7934    MILLER   CLERK         10
+7844    TURNER   SALESMAN      30
+7521    WARD     SALESMAN      30
+
+
+====================================================================
+ 16
+Display the employees who earn a salary less than the average
+salary of their respective department. Also display the average
+salary.
+(Use Inline Views)
+====================================================================
+
+SQL Command:
+------------
+sql> SELECT E.EMPNO,
+            E.ENAME,
+            E.SAL,
+            D.AVGSAL
+     FROM EMP E,
+     (
+         SELECT DEPTNO,
+                AVG(SAL) AVGSAL
+         FROM EMP
+         GROUP BY DEPTNO
+     ) D
+     WHERE E.DEPTNO=D.DEPTNO
+     AND E.SAL<D.AVGSAL;
+
+Output:
+-------
+
+EMPNO   ENAME    SAL    AVGSAL
+------  -------  -----  --------
+7369    SMITH     800   2175.00
+7876    ADAMS    1100   2175.00
+7934    MILLER   1300   2916.67
+7521    WARD     1250   1566.67
+7654    MARTIN   1250   1566.67
+7844    TURNER   1500   1566.67
+7900    JAMES     950   1566.67
+
+
+====================================================================
+ 17
+Write a query that displays the LOC of those departments that have
+a sum of salary less than the average salary of all employees in
+the EMP table.
+(Use WITH Clause)
+====================================================================
+
+SQL Command:
+------------
+sql> WITH DEPT_TOTAL AS
+     (
+         SELECT DEPTNO,
+                SUM(SAL) TOTALSAL
+         FROM EMP
+         GROUP BY DEPTNO
+     )
+     SELECT D.LOC
+     FROM DEPT D,
+          DEPT_TOTAL DT
+     WHERE D.DEPTNO=DT.DEPTNO
+     AND DT.TOTALSAL <
+     (
+         SELECT AVG(SAL)
+         FROM EMP
+     );
+
+Output:
+-------
+
+No rows selected.
+
+====================================================================
