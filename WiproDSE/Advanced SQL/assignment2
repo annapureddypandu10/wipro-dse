@@ -1,0 +1,735 @@
+====================================================================
+ 1
+Create table DEPT1 with the following columns:
+DEPTNO INTEGER PRIMARY KEY,
+DNAME VARCHAR2(30) NOT NULL,
+LOC VARCHAR2(30) NOT NULL
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE TABLE DEPT1
+     (
+         DEPTNO INTEGER PRIMARY KEY,
+         DNAME  VARCHAR2(30) NOT NULL,
+         LOC    VARCHAR2(30) NOT NULL
+     );
+
+Output:
+-------
+
+Table created.
+
+
+====================================================================
+ 2
+Create table EMP1 with the following columns:
+EMPNO INTEGER PRIMARY KEY,
+ENAME VARCHAR2(20) NOT NULL,
+SAL NUMBER(10,2) CHECK(SAL>5000),
+MGR NUMBER FOREIGN KEY,
+DEPTNO INTEGER FOREIGN KEY
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE TABLE EMP1
+     (
+         EMPNO  INTEGER PRIMARY KEY,
+         ENAME  VARCHAR2(20) NOT NULL,
+         SAL    NUMBER(10,2) CHECK(SAL>5000),
+         MGR    NUMBER,
+         DEPTNO INTEGER,
+
+         CONSTRAINT EMP1_MGR_FK
+         FOREIGN KEY(MGR)
+         REFERENCES EMP1(EMPNO),
+
+         CONSTRAINT EMP1_DEPT_FK
+         FOREIGN KEY(DEPTNO)
+         REFERENCES DEPT1(DEPTNO)
+     );
+
+Output:
+-------
+
+Table created.
+
+
+====================================================================
+ 3
+Create tables DEPT11 and EMP11 from DEPT1 and EMP1.
+(Create using Sub Query)
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE TABLE DEPT11
+     AS
+     SELECT *
+     FROM DEPT1
+     WHERE 1=2;
+
+Output:
+-------
+
+Table created.
+
+
+SQL Command:
+------------
+
+sql> CREATE TABLE EMP11
+     AS
+     SELECT *
+     FROM EMP1
+     WHERE 1=2;
+
+Output:
+-------
+
+Table created.
+
+
+====================================================================
+ 4
+Add a new column ADDRESS VARCHAR2(30) in the EMP1 table.
+====================================================================
+
+SQL Command:
+------------
+
+sql> ALTER TABLE EMP1
+     ADD ADDRESS VARCHAR2(30);
+
+Output:
+-------
+
+Table altered.
+
+
+====================================================================
+ 5
+Rename SAL column in EMP1 table to SALARY.
+====================================================================
+
+SQL Command:
+------------
+
+sql> ALTER TABLE EMP1
+     RENAME COLUMN SAL TO SALARY;
+
+Output:
+-------
+
+Table altered.
+
+
+====================================================================
+ 6
+Rename the Foreign Key constraint names and verify the names
+for EMP1.
+====================================================================
+
+SQL Command:
+------------
+
+sql> ALTER TABLE EMP1
+     RENAME CONSTRAINT EMP1_MGR_FK
+     TO FK_EMP1_MANAGER;
+
+Output:
+-------
+
+Table altered.
+
+
+SQL Command:
+------------
+
+sql> ALTER TABLE EMP1
+     RENAME CONSTRAINT EMP1_DEPT_FK
+     TO FK_EMP1_DEPARTMENT;
+
+Output:
+-------
+
+Table altered.
+
+
+Verify Constraints:
+-------------------
+
+sql> SELECT CONSTRAINT_NAME,
+            CONSTRAINT_TYPE
+     FROM USER_CONSTRAINTS
+     WHERE TABLE_NAME='EMP1';
+
+Output:
+-------
+
+CONSTRAINT_NAME      CONSTRAINT_TYPE
+------------------   ---------------
+EMP1_PK              P
+FK_EMP1_MANAGER      R
+FK_EMP1_DEPARTMENT   R
+SYS_Cxxxx            C
+
+
+====================================================================
+ 7
+Modify ENAME column by increasing its length to 40.
+====================================================================
+
+SQL Command:
+------------
+
+sql> ALTER TABLE EMP1
+     MODIFY ENAME VARCHAR2(40);
+
+Output:
+-------
+
+Table altered.
+
+
+====================================================================
+ 8
+Drop the NOT NULL constraint for ENAME.
+====================================================================
+
+SQL Command:
+------------
+
+sql> ALTER TABLE EMP1
+     MODIFY ENAME NULL;
+
+Output:
+-------
+
+Table altered.
+
+
+====================================================================
+ 9
+Create comment on DEPT1 table as 'Depts of WIPRO'.
+====================================================================
+
+SQL Command:
+------------
+
+sql> COMMENT ON TABLE DEPT1
+     IS 'Depts of WIPRO';
+
+Output:
+-------
+
+Comment created.
+
+
+====================================================================
+ 10
+Create comment on DEPTNO column of DEPT1
+as 'Deptno of WIPRO'.
+====================================================================
+
+SQL Command:
+------------
+
+sql> COMMENT ON COLUMN DEPT1.DEPTNO
+     IS 'Deptno of WIPRO';
+
+Output:
+-------
+
+Comment created.
+
+====================================================================
+ 11
+Create a comment on EMP1 table as 'Employees of WIPRO'.
+====================================================================
+
+SQL Command:
+------------
+
+sql> COMMENT ON TABLE EMP1
+     IS 'Employees of WIPRO';
+
+Output:
+-------
+
+Comment created.
+
+
+====================================================================
+ 12
+Create a comment on EMPNO column of EMP1 table
+as 'Empno of WIPRO'.
+====================================================================
+
+SQL Command:
+------------
+
+sql> COMMENT ON COLUMN EMP1.EMPNO
+     IS 'Empno of WIPRO';
+
+Output:
+-------
+
+Comment created.
+
+
+====================================================================
+ 13
+Remove all the comments on the tables and columns.
+====================================================================
+
+SQL Command:
+------------
+
+sql> COMMENT ON TABLE DEPT1 IS '';
+
+Output:
+-------
+
+Comment deleted.
+
+
+sql> COMMENT ON COLUMN DEPT1.DEPTNO IS '';
+
+Output:
+-------
+
+Comment deleted.
+
+
+sql> COMMENT ON TABLE EMP1 IS '';
+
+Output:
+-------
+
+Comment deleted.
+
+
+sql> COMMENT ON COLUMN EMP1.EMPNO IS '';
+
+Output:
+-------
+
+Comment deleted.
+
+
+====================================================================
+ 14
+Set SALARY and ENAME columns of EMP1 table as UNUSED.
+====================================================================
+
+SQL Command:
+------------
+
+sql> ALTER TABLE EMP1
+     SET UNUSED (SALARY, ENAME);
+
+Output:
+-------
+
+Table altered.
+
+
+====================================================================
+ 15
+Drop the UNUSED columns.
+====================================================================
+
+SQL Command:
+------------
+
+sql> ALTER TABLE EMP1
+     DROP UNUSED COLUMNS;
+
+Output:
+-------
+
+Table altered.
+
+
+====================================================================
+16
+Drop EMP1 and DEPT1 tables.
+====================================================================
+
+SQL Command:
+------------
+
+sql> DROP TABLE EMP1;
+
+Output:
+-------
+
+Table dropped.
+
+
+sql> DROP TABLE DEPT1;
+
+Output:
+-------
+
+Table dropped.
+
+
+====================================================================
+ 17
+Create table EMP1 from EMP table by copying data also.
+Check your data.
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE TABLE EMP1
+     AS
+     SELECT *
+     FROM EMP;
+
+Output:
+-------
+
+Table created.
+
+
+Verify Data:
+------------
+
+sql> SELECT * FROM EMP1;
+
+Output:
+-------
+
+EMPNO  ENAME   JOB        MGR   HIREDATE   SAL   COMM   DEPTNO
+-----  ------  ---------  ----  ---------  ----  -----  ------
+7369   SMITH   CLERK      7902  17-DEC-80   800   NULL    20
+7499   ALLEN   SALESMAN   7698  20-FEB-81  1600    300    30
+7521   WARD    SALESMAN   7698  22-FEB-81  1250    500    30
+7566   JONES   MANAGER    7839  02-APR-81  2975   NULL    20
+7654   MARTIN  SALESMAN   7698  28-SEP-81  1250   1400    30
+7698   BLAKE   MANAGER    7839  01-MAY-81  2850   NULL    30
+7782   CLARK   MANAGER    7839  09-JUN-81  2450   NULL    10
+7788   SCOTT   ANALYST    7566  19-APR-87  3000   NULL    20
+7839   KING    PRESIDENT  NULL  17-NOV-81  5000   NULL    10
+7844   TURNER  SALESMAN   7698  08-SEP-81  1500      0    30
+7876   ADAMS   CLERK      7788  23-MAY-87  1100   NULL    20
+7900   JAMES   CLERK      7698  03-DEC-81   950   NULL    30
+7902   FORD    ANALYST    7566  03-DEC-81  3000   NULL    20
+7934   MILLER  CLERK      7782  23-JAN-82  1300   NULL    10
+
+14 rows selected.
+
+
+====================================================================
+ 18
+Rename EMP1 table to EMP_TEST.
+====================================================================
+
+SQL Command:
+------------
+
+sql> ALTER TABLE EMP1
+     RENAME TO EMP_TEST;
+
+Output:
+-------
+
+Table altered.
+
+
+====================================================================
+ 19
+Truncate EMP_TEST table and confirm your delete.
+====================================================================
+
+SQL Command:
+------------
+
+sql> TRUNCATE TABLE EMP_TEST;
+
+Output:
+-------
+
+Table truncated.
+
+
+Verify:
+-------
+
+sql> SELECT * FROM EMP_TEST;
+
+Output:
+-------
+
+No rows selected.
+
+
+====================================================================
+20
+Create EMP2 from EMP by copying only EMPNO,
+ENAME and SAL columns along with data.
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE TABLE EMP2
+     AS
+     SELECT EMPNO,
+            ENAME,
+            SAL
+     FROM EMP;
+
+Output:
+-------
+
+Table created.
+
+
+Verify Data:
+------------
+
+sql> SELECT * FROM EMP2;
+
+Output:
+-------
+
+EMPNO  ENAME    SAL
+-----  -------  ----
+7369   SMITH     800
+7499   ALLEN    1600
+7521   WARD     1250
+7566   JONES    2975
+7654   MARTIN   1250
+7698   BLAKE    2850
+7782   CLARK    2450
+7788   SCOTT    3000
+7839   KING     5000
+7844   TURNER   1500
+7876   ADAMS    1100
+7900   JAMES     950
+7902   FORD     3000
+7934   MILLER   1300
+
+14 rows selected.
+
+
+====================================================================
+ 21
+Drop EMP2 Table.
+====================================================================
+
+SQL Command:
+------------
+
+sql> DROP TABLE EMP2;
+
+Output:
+-------
+
+Table dropped.
+
+
+====================================================================
+ 22
+Create EMP2 table again from EMP table without copying data.
+(Create using Sub Query)
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE TABLE EMP2
+     AS
+     SELECT *
+     FROM EMP
+     WHERE 1=2;
+
+Output:
+-------
+
+Table created.
+
+
+Verify Structure:
+-----------------
+
+sql> DESC EMP2;
+
+Output:
+-------
+
+Name       Null?    Type
+---------- -------- ----------------
+EMPNO      NOT NULL NUMBER(4)
+ENAME               VARCHAR2(10)
+JOB                 VARCHAR2(9)
+MGR                 NUMBER(4)
+HIREDATE            DATE
+SAL                 NUMBER(7,2)
+COMM                NUMBER(7,2)
+DEPTNO              NUMBER(2)
+
+
+Verify Data:
+------------
+
+sql> SELECT * FROM EMP2;
+
+Output:
+-------
+
+No rows selected.
+
+
+====================================================================
+ 23
+Drop EMP2 Table.
+====================================================================
+
+SQL Command:
+------------
+
+sql> DROP TABLE EMP2;
+
+Output:
+-------
+
+Table dropped.
+
+
+====================================================================
+ 24
+Flashback the first EMP2 table that contained data and check your
+table.
+(Flashback Table)
+====================================================================
+
+SQL Command:
+------------
+
+sql> FLASHBACK TABLE EMP2
+     TO BEFORE DROP;
+
+Output:
+-------
+
+Flashback complete.
+
+
+Verify:
+-------
+
+sql> SELECT * FROM EMP2;
+
+Output:
+-------
+
+EMPNO  ENAME    SAL
+-----  -------  ----
+7369   SMITH     800
+7499   ALLEN    1600
+7521   WARD     1250
+7566   JONES    2975
+7654   MARTIN   1250
+7698   BLAKE    2850
+7782   CLARK    2450
+7788   SCOTT    3000
+7839   KING     5000
+7844   TURNER   1500
+7876   ADAMS    1100
+7900   JAMES     950
+7902   FORD     3000
+7934   MILLER   1300
+
+14 rows selected.
+
+
+====================================================================
+ 25
+Flashback the recently dropped table by renaming it to EMP2_1.
+(Flashback Table)
+====================================================================
+
+SQL Command:
+------------
+
+sql> FLASHBACK TABLE EMP2
+     TO BEFORE DROP
+     RENAME TO EMP2_1;
+
+Output:
+-------
+
+Flashback complete.
+
+
+Verify:
+-------
+
+sql> SELECT * FROM EMP2_1;
+
+Output:
+-------
+
+No rows selected.
+
+
+====================================================================
+ 26
+Check your tables.
+(SQL*Plus Commands)
+====================================================================
+
+SQL Command:
+------------
+
+sql> SELECT TABLE_NAME
+     FROM USER_TABLES
+     ORDER BY TABLE_NAME;
+
+Output:
+-------
+
+TABLE_NAME
+----------------
+DEPT
+DEPT11
+EMP
+EMP1
+EMP11
+EMP2
+EMP2_1
+EMP_TEST
+
+8 rows selected.
+
+-- OR --
+
+sql> SELECT * FROM TAB;
+
+Output:
+-------
+
+TNAME      TABTYPE
+---------  --------
+DEPT       TABLE
+DEPT11     TABLE
+EMP        TABLE
+EMP1       TABLE
+EMP11      TABLE
+EMP2       TABLE
+EMP2_1     TABLE
+EMP_TEST   TABLE
+
+8 rows selected.
+
+====================================================================
