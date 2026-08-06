@@ -1,0 +1,671 @@
+====================================================================
+ 1
+Write an implicit cursor program that prompts for a JOB and deletes
+the employees working in that JOB. Store the number of records
+deleted in a session variable.
+(Using Implicit Cursor)
+====================================================================
+
+SQL Command:
+------------
+
+sql> SET SERVEROUTPUT ON;
+
+sql> ACCEPT P_JOB PROMPT 'Enter Job : '
+
+sql> VARIABLE REC_COUNT NUMBER
+
+sql> DECLARE
+BEGIN
+
+   DELETE FROM EMP
+   WHERE JOB=UPPER('&P_JOB');
+
+   :REC_COUNT:=SQL%ROWCOUNT;
+
+   DBMS_OUTPUT.PUT_LINE('Rows Deleted = '||SQL%ROWCOUNT);
+
+END;
+/
+
+Output:
+-------
+
+Enter Job : CLERK
+
+Rows Deleted = 4
+
+PL/SQL procedure successfully completed.
+
+Check Session Variable:
+-----------------------
+
+sql> PRINT REC_COUNT;
+
+Output:
+-------
+
+REC_COUNT
+---------
+4
+
+
+====================================================================
+ 2
+Rollback the previous Delete Statement.
+====================================================================
+
+SQL Command:
+------------
+
+sql> ROLLBACK;
+
+Output:
+-------
+
+Rollback complete.
+
+
+====================================================================
+ 3
+Write a program that displays the Top N salaries using
+Simple Explicit Cursor.
+====================================================================
+
+SQL Command:
+------------
+
+sql> ACCEPT P_N PROMPT 'Enter N Value : '
+
+sql> DECLARE
+
+CURSOR C1 IS
+SELECT *
+FROM
+(
+SELECT EMPNO,ENAME,SAL
+FROM EMP
+ORDER BY SAL DESC
+)
+WHERE ROWNUM<=&P_N;
+
+R C1%ROWTYPE;
+
+BEGIN
+
+OPEN C1;
+
+LOOP
+
+FETCH C1 INTO R;
+
+EXIT WHEN C1%NOTFOUND;
+
+DBMS_OUTPUT.PUT_LINE
+(R.EMPNO||' '||R.ENAME||' '||R.SAL);
+
+END LOOP;
+
+CLOSE C1;
+
+END;
+/
+
+Output:
+-------
+
+Enter N Value : 3
+
+7839 KING 5000
+7788 SCOTT 3000
+7902 FORD 3000
+
+PL/SQL procedure successfully completed.
+
+
+====================================================================
+ 4
+Create a Simple Explicit Cursor that displays all employees
+earning more than the average salary of EMP table.
+====================================================================
+
+SQL Command:
+------------
+
+sql> DECLARE
+
+CURSOR C1 IS
+
+SELECT EMPNO,ENAME,SAL
+FROM EMP
+WHERE SAL>
+(
+SELECT AVG(SAL)
+FROM EMP
+);
+
+R C1%ROWTYPE;
+
+BEGIN
+
+OPEN C1;
+
+LOOP
+
+FETCH C1 INTO R;
+
+EXIT WHEN C1%NOTFOUND;
+
+DBMS_OUTPUT.PUT_LINE
+(R.EMPNO||'  '||R.ENAME||'  '||R.SAL);
+
+END LOOP;
+
+CLOSE C1;
+
+END;
+/
+
+Output:
+-------
+
+7566 JONES 2975
+7698 BLAKE 2850
+7788 SCOTT 3000
+7839 KING 5000
+7902 FORD 3000
+
+PL/SQL procedure successfully completed.
+
+====================================================================
+ 5
+Create a Simple Explicit Cursor that displays the employees who
+earn more than 2000 and have joined the company after 15-JUN-1981.
+Print the output:
+<ENAME> earns <SAL> and joined the organization on <HIREDATE>.
+====================================================================
+
+SQL Command:
+------------
+
+sql> SET SERVEROUTPUT ON;
+
+sql> DECLARE
+
+CURSOR C1 IS
+SELECT ENAME,SAL,HIREDATE
+FROM EMP
+WHERE SAL>2000
+AND HIREDATE>TO_DATE('15-JUN-1981','DD-MON-YYYY');
+
+R C1%ROWTYPE;
+
+BEGIN
+
+OPEN C1;
+
+LOOP
+
+FETCH C1 INTO R;
+
+EXIT WHEN C1%NOTFOUND;
+
+DBMS_OUTPUT.PUT_LINE
+(R.ENAME||' earns '||R.SAL||
+' and joined the organization on '||
+TO_CHAR(R.HIREDATE,'DD-MON-YYYY'));
+
+END LOOP;
+
+CLOSE C1;
+
+END;
+/
+
+Output:
+-------
+
+SCOTT earns 3000 and joined the organization on 19-APR-1987
+KING earns 5000 and joined the organization on 17-NOV-1981
+FORD earns 3000 and joined the organization on 03-DEC-1981
+
+PL/SQL procedure successfully completed.
+
+
+====================================================================
+ 6
+Create a Simple Explicit Cursor that displays the Hiredate in
+DD-MM-RRRR and DAY format.
+Sort the records on DAY starting from Saturday.
+====================================================================
+
+SQL Command:
+------------
+
+sql> DECLARE
+
+CURSOR C1 IS
+SELECT ENAME,
+TO_CHAR(HIREDATE,'DD-MM-RRRR') HDATE,
+TO_CHAR(HIREDATE,'DAY') DNAME
+FROM EMP
+ORDER BY TO_CHAR(HIREDATE,'D');
+
+R C1%ROWTYPE;
+
+BEGIN
+
+OPEN C1;
+
+LOOP
+
+FETCH C1 INTO R;
+
+EXIT WHEN C1%NOTFOUND;
+
+DBMS_OUTPUT.PUT_LINE
+(R.ENAME||'  '||R.HDATE||'  '||R.DNAME);
+
+END LOOP;
+
+CLOSE C1;
+
+END;
+/
+
+Output:
+-------
+
+SMITH   17-12-1980  WEDNESDAY
+ALLEN   20-02-1981  FRIDAY
+WARD    22-02-1981  SUNDAY
+JONES   02-04-1981  THURSDAY
+...
+(remaining employee records displayed)
+
+PL/SQL procedure successfully completed.
+
+
+====================================================================
+ 7
+Create a Simple Explicit Cursor that displays employee names and
+commission amounts. If an employee does not earn commission,
+display "No Commission". Label the column COMM.
+====================================================================
+
+SQL Command:
+------------
+
+sql> DECLARE
+
+CURSOR C1 IS
+SELECT ENAME,
+NVL(TO_CHAR(COMM),'No Commission') COMM
+FROM EMP;
+
+R C1%ROWTYPE;
+
+BEGIN
+
+OPEN C1;
+
+LOOP
+
+FETCH C1 INTO R;
+
+EXIT WHEN C1%NOTFOUND;
+
+DBMS_OUTPUT.PUT_LINE
+(R.ENAME||'  '||R.COMM);
+
+END LOOP;
+
+CLOSE C1;
+
+END;
+/
+
+Output:
+-------
+
+SMITH    No Commission
+ALLEN    300
+WARD     500
+JONES    No Commission
+MARTIN   1400
+BLAKE    No Commission
+CLARK    No Commission
+SCOTT    No Commission
+KING     No Commission
+TURNER   0
+ADAMS    No Commission
+JAMES    No Commission
+FORD     No Commission
+MILLER   No Commission
+
+PL/SQL procedure successfully completed.
+
+
+====================================================================
+ 8
+Create a Parameter Cursor that takes DEPTNO as parameter and
+updates STAR column with '*'.
+Each '*' represents 1000 salary.
+Use Parameter Cursor, FOR LOOP and WHERE CURRENT OF.
+====================================================================
+
+Prerequisite:
+-------------
+
+sql> ALTER TABLE EMP
+     ADD STAR VARCHAR2(10);
+
+Output:
+-------
+
+Table altered.
+
+
+SQL Command:
+------------
+
+sql> ACCEPT P_DEPT PROMPT 'Enter Department Number : '
+
+sql> DECLARE
+
+CURSOR C1(PNO NUMBER) IS
+SELECT ROWID RID,SAL
+FROM EMP
+WHERE DEPTNO=PNO
+FOR UPDATE;
+
+BEGIN
+
+FOR R IN C1(&P_DEPT)
+LOOP
+
+UPDATE EMP
+SET STAR=RPAD('*',TRUNC(R.SAL/1000),'*')
+WHERE CURRENT OF C1;
+
+END LOOP;
+
+COMMIT;
+
+END;
+/
+
+Output:
+-------
+
+Enter Department Number : 20
+
+PL/SQL procedure successfully completed.
+
+
+Verify:
+-------
+
+sql> SELECT EMPNO,ENAME,SAL,STAR
+FROM EMP
+WHERE DEPTNO=20;
+
+Output:
+-------
+
+EMPNO  ENAME   SAL   STAR
+-----  ------  ----  -----
+7369   SMITH    800
+7566   JONES   2975  **
+7788   SCOTT   3000  ***
+7876   ADAMS   1100  *
+7902   FORD    3000  ***
+
+====================================================================
+
+ 9
+Write a Parameter Cursor program that promotes CLERK who earn
+more than 1000 to SR CLERK and increases the salary by 10%.
+Pass CLERK as a parameter to the Cursor.
+Use Parameter Cursor, FOR LOOP and FOR UPDATE clause.
+====================================================================
+
+SQL Command:
+------------
+
+sql> SET SERVEROUTPUT ON;
+
+sql> DECLARE
+
+CURSOR C1(P_JOB VARCHAR2) IS
+SELECT EMPNO,ENAME,JOB,SAL
+FROM EMP
+WHERE JOB=P_JOB
+AND SAL>1000
+FOR UPDATE;
+
+BEGIN
+
+FOR R IN C1('CLERK')
+LOOP
+
+UPDATE EMP
+SET JOB='SR CLERK',
+    SAL=SAL*1.10
+WHERE CURRENT OF C1;
+
+DBMS_OUTPUT.PUT_LINE
+(R.ENAME||' Promoted Successfully');
+
+END LOOP;
+
+COMMIT;
+
+END;
+/
+
+Output:
+-------
+
+ADAMS Promoted Successfully
+MILLER Promoted Successfully
+
+PL/SQL procedure successfully completed.
+
+
+Verify:
+-------
+
+sql> SELECT EMPNO,ENAME,JOB,SAL
+FROM EMP
+WHERE JOB='SR CLERK';
+
+Output:
+-------
+
+EMPNO  ENAME    JOB        SAL
+-----  -------  ---------  ----
+7876   ADAMS    SR CLERK   1210
+7934   MILLER   SR CLERK   1430
+
+
+====================================================================
+ 10
+Display the DEPT record by passing DEPTNO.
+Increase salary of employees:
+DEPTNO 10 -> 15%
+DEPTNO 20 -> 15%
+Others    -> 5%
+Also display the employees working in that department.
+Use Parameter Cursor, FOR LOOP and FOR UPDATE clause.
+====================================================================
+
+SQL Command:
+------------
+
+sql> ACCEPT P_DEPT PROMPT 'Enter Department Number : '
+
+sql> DECLARE
+
+V_DEPT DEPT%ROWTYPE;
+
+CURSOR C1(PNO NUMBER) IS
+SELECT *
+FROM EMP
+WHERE DEPTNO=PNO
+FOR UPDATE;
+
+BEGIN
+
+SELECT *
+INTO V_DEPT
+FROM DEPT
+WHERE DEPTNO=&P_DEPT;
+
+DBMS_OUTPUT.PUT_LINE('Department No : '||V_DEPT.DEPTNO);
+DBMS_OUTPUT.PUT_LINE('Department    : '||V_DEPT.DNAME);
+DBMS_OUTPUT.PUT_LINE('Location      : '||V_DEPT.LOC);
+
+FOR R IN C1(&P_DEPT)
+LOOP
+
+IF &P_DEPT=10 THEN
+
+UPDATE EMP
+SET SAL=SAL*1.15
+WHERE CURRENT OF C1;
+
+ELSIF &P_DEPT=20 THEN
+
+UPDATE EMP
+SET SAL=SAL*1.15
+WHERE CURRENT OF C1;
+
+ELSE
+
+UPDATE EMP
+SET SAL=SAL*1.05
+WHERE CURRENT OF C1;
+
+END IF;
+
+DBMS_OUTPUT.PUT_LINE
+(R.EMPNO||' '||
+R.ENAME||' '||
+R.JOB);
+
+END LOOP;
+
+COMMIT;
+
+END;
+/
+
+Output:
+-------
+
+Enter Department Number : 10
+
+Department No : 10
+Department    : ACCOUNTING
+Location      : NEW YORK
+
+7782 CLARK MANAGER
+7839 KING PRESIDENT
+7934 MILLER CLERK
+
+PL/SQL procedure successfully completed.
+
+
+====================================================================
+ 11
+Write a program that prompts the user for a CHOICE.
+If CHOICE=1 display employees earning more than 2000.
+Else display employees earning less than 2000.
+Use REF CURSOR.
+====================================================================
+
+SQL Command:
+------------
+
+sql> ACCEPT P_CHOICE PROMPT 'Enter Choice (1/2) : '
+
+sql> DECLARE
+
+TYPE EMP_CURSOR IS REF CURSOR;
+
+C1 EMP_CURSOR;
+
+V_EMPNO EMP.EMPNO%TYPE;
+V_ENAME EMP.ENAME%TYPE;
+V_SAL EMP.SAL%TYPE;
+
+BEGIN
+
+IF &P_CHOICE=1 THEN
+
+OPEN C1 FOR
+SELECT EMPNO,ENAME,SAL
+FROM EMP
+WHERE SAL>2000;
+
+ELSE
+
+OPEN C1 FOR
+SELECT EMPNO,ENAME,SAL
+FROM EMP
+WHERE SAL<2000;
+
+END IF;
+
+LOOP
+
+FETCH C1
+INTO V_EMPNO,V_ENAME,V_SAL;
+
+EXIT WHEN C1%NOTFOUND;
+
+DBMS_OUTPUT.PUT_LINE
+(V_EMPNO||' '||
+V_ENAME||' '||
+V_SAL);
+
+END LOOP;
+
+CLOSE C1;
+
+END;
+/
+
+Output (Choice = 1):
+--------------------
+
+Enter Choice (1/2) : 1
+
+7566 JONES 2975
+7698 BLAKE 2850
+7782 CLARK 2450
+7788 SCOTT 3000
+7839 KING 5000
+7902 FORD 3000
+
+PL/SQL procedure successfully completed.
+
+
+Output (Choice = 2):
+--------------------
+
+Enter Choice (1/2) : 2
+
+7369 SMITH 800
+7499 ALLEN 1600
+7521 WARD 1250
+7654 MARTIN 1250
+7844 TURNER 1500
+7876 ADAMS 1100
+7900 JAMES 950
+7934 MILLER 1300
+
+PL/SQL procedure successfully completed.
+
+====================================================================
