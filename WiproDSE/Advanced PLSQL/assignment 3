@@ -1,0 +1,731 @@
+====================================================================
+ 1
+Create a Function GET_JOB that returns the JOB of an Employee.
+Define a session variable TITLE with length 35 characters.
+Invoke the function and print the returned JOB.
+====================================================================
+
+SQL Command:
+------------
+
+sql> SET SERVEROUTPUT ON;
+
+sql> CREATE OR REPLACE FUNCTION GET_JOB
+(
+     P_EMPNO IN EMP.EMPNO%TYPE
+)
+RETURN VARCHAR2
+IS
+     V_JOB EMP.JOB%TYPE;
+BEGIN
+
+     SELECT JOB
+     INTO V_JOB
+     FROM EMP
+     WHERE EMPNO=P_EMPNO;
+
+     RETURN V_JOB;
+
+EXCEPTION
+
+     WHEN NO_DATA_FOUND THEN
+          RETURN 'EMPLOYEE NOT FOUND';
+
+END;
+/
+
+Output:
+-------
+
+Function created.
+
+
+Execute:
+--------
+
+sql> VARIABLE TITLE VARCHAR2(35)
+
+sql> EXEC :TITLE:=GET_JOB(7788);
+
+PL/SQL procedure successfully completed.
+
+
+Print:
+------
+
+sql> PRINT TITLE
+
+Output:
+-------
+
+TITLE
+-----------------------------------
+ANALYST
+
+
+====================================================================
+ 2
+Create a Function GET_ANNUAL_SAL that calculates Annual Salary
+of an Employee.
+Call the function from a SELECT statement for employees in
+DEPTNO 30.
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE OR REPLACE FUNCTION GET_ANNUAL_SAL
+(
+     P_SAL NUMBER,
+     P_COMM NUMBER
+)
+RETURN NUMBER
+IS
+BEGIN
+
+     RETURN (P_SAL*12)+NVL(P_COMM,0);
+
+END;
+/
+
+Output:
+-------
+
+Function created.
+
+
+Execute:
+--------
+
+sql> SELECT EMPNO,
+            ENAME,
+            GET_ANNUAL_SAL(SAL,COMM) AS ANNUAL_SAL
+     FROM EMP
+     WHERE DEPTNO=30;
+
+Output:
+-------
+
+EMPNO  ENAME    ANNUAL_SAL
+-----  -------  ----------
+7499   ALLEN      19500
+7521   WARD       15500
+7654   MARTIN     16400
+7698   BLAKE      34200
+7844   TURNER     18000
+7900   JAMES      11400
+
+6 rows selected.
+
+
+====================================================================
+ 3
+Assume EMP and DEPT have no relationship.
+
+Create a Function VALID_DEPTNO that returns TRUE if the given
+DEPTNO exists.
+
+Create a Procedure ADD_EMP that inserts EMPNO, ENAME, SAL and
+DEPTNO into EMP only if VALID_DEPTNO returns TRUE.
+Otherwise display an error message.
+====================================================================
+
+Step 1 : Function VALID_DEPTNO
+------------------------------
+
+sql> CREATE OR REPLACE FUNCTION VALID_DEPTNO
+(
+     P_DEPTNO NUMBER
+)
+RETURN BOOLEAN
+IS
+
+V_COUNT NUMBER;
+
+BEGIN
+
+SELECT COUNT(*)
+INTO V_COUNT
+FROM DEPT
+WHERE DEPTNO=P_DEPTNO;
+
+IF V_COUNT>0 THEN
+     RETURN TRUE;
+ELSE
+     RETURN FALSE;
+END IF;
+
+END;
+/
+
+Output:
+-------
+
+Function created.
+
+
+Step 2 : Procedure ADD_EMP
+--------------------------
+
+sql> CREATE OR REPLACE PROCEDURE ADD_EMP
+(
+     P_EMPNO NUMBER,
+     P_ENAME VARCHAR2,
+     P_SAL NUMBER,
+     P_DEPTNO NUMBER
+)
+IS
+BEGIN
+
+IF VALID_DEPTNO(P_DEPTNO) THEN
+
+     INSERT INTO EMP
+     (EMPNO,ENAME,SAL,DEPTNO)
+     VALUES
+     (P_EMPNO,P_ENAME,P_SAL,P_DEPTNO);
+
+     COMMIT;
+
+     DBMS_OUTPUT.PUT_LINE
+     ('Employee Inserted.');
+
+ELSE
+
+     DBMS_OUTPUT.PUT_LINE
+     ('Invalid Department Number.');
+
+END IF;
+
+EXCEPTION
+
+WHEN DUP_VAL_ON_INDEX THEN
+
+     DBMS_OUTPUT.PUT_LINE
+     ('Duplicate Employee Number.');
+
+WHEN OTHERS THEN
+
+     DBMS_OUTPUT.PUT_LINE(SQLERRM);
+
+END;
+/
+
+Output:
+-------
+
+Procedure created.
+
+
+Execute (Valid Department):
+---------------------------
+
+sql> EXEC ADD_EMP(9001,'JOHN',15000,20);
+
+Output:
+-------
+
+Employee Inserted.
+
+PL/SQL procedure successfully completed.
+
+
+Execute (Invalid Department):
+-----------------------------
+
+sql> EXEC ADD_EMP(9002,'DAVID',18000,99);
+
+Output:
+-------
+
+Invalid Department Number.
+
+PL/SQL procedure successfully completed.
+
+====================================================================
+ 4
+Create a PL/SQL Function CAL_REVERSE that accepts a string and
+returns the reverse of the string.
+(Do not use the built-in REVERSE function.)
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE OR REPLACE FUNCTION CAL_REVERSE
+(
+     P_STR VARCHAR2
+)
+RETURN VARCHAR2
+IS
+     V_REV VARCHAR2(200):='';
+BEGIN
+
+     FOR I IN REVERSE 1..LENGTH(P_STR)
+     LOOP
+          V_REV:=V_REV||SUBSTR(P_STR,I,1);
+     END LOOP;
+
+     RETURN V_REV;
+
+END;
+/
+
+Output:
+-------
+
+Function created.
+
+
+Execute:
+--------
+
+sql> SELECT CAL_REVERSE('ORACLE') AS REVERSE_STRING
+     FROM DUAL;
+
+Output:
+-------
+
+REVERSE_STRING
+--------------
+ELCARO
+
+
+====================================================================
+ 5
+Create a Function CAL_PCT that calculates an employee salary
+based on the given percentage.
+Pass EMPNO and percentage.
+Use 16% as the default percentage.
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE OR REPLACE FUNCTION CAL_PCT
+(
+     P_EMPNO NUMBER,
+     P_PERCENT NUMBER DEFAULT 16
+)
+RETURN NUMBER
+IS
+
+     V_SAL EMP.SAL%TYPE;
+
+BEGIN
+
+     SELECT SAL
+     INTO V_SAL
+     FROM EMP
+     WHERE EMPNO=P_EMPNO;
+
+     RETURN V_SAL+(V_SAL*P_PERCENT/100);
+
+EXCEPTION
+
+     WHEN NO_DATA_FOUND THEN
+          RETURN NULL;
+
+END;
+/
+
+Output:
+-------
+
+Function created.
+
+
+Execute:
+--------
+
+sql> SELECT EMPNO,
+            ENAME,
+            SAL,
+            CAL_PCT(EMPNO) AS NEW_SALARY
+     FROM EMP;
+
+Output:
+-------
+
+EMPNO  ENAME   SAL    NEW_SALARY
+-----  ------  -----  ----------
+7369   SMITH    800      928
+7499   ALLEN   1600     1856
+7521   WARD    1250     1450
+7566   JONES   2975     3451
+7654   MARTIN  1250     1450
+7698   BLAKE   2850     3306
+7782   CLARK   2450     2842
+7788   SCOTT   3000     3480
+7839   KING    5000     5800
+7844   TURNER  1500     1740
+7876   ADAMS   1100     1276
+7900   JAMES    950     1102
+7902   FORD    3000     3480
+7934   MILLER  1300     1508
+
+14 rows selected.
+
+
+====================================================================
+ 6
+Create a Function that returns TRUE if the salary is less than
+the average salary; otherwise FALSE.
+
+Create a Procedure REC_INSUPD that inserts/updates an employee
+only if the new salary is less than the average salary.
+====================================================================
+
+Step 1 : Create Function
+------------------------
+
+sql> CREATE OR REPLACE FUNCTION CHECK_SAL
+(
+     P_SAL NUMBER
+)
+RETURN BOOLEAN
+IS
+
+     V_AVG NUMBER;
+
+BEGIN
+
+     SELECT AVG(SAL)
+     INTO V_AVG
+     FROM EMP;
+
+     IF P_SAL<V_AVG THEN
+          RETURN TRUE;
+     ELSE
+          RETURN FALSE;
+     END IF;
+
+END;
+/
+
+Output:
+-------
+
+Function created.
+
+
+Step 2 : Create Procedure
+-------------------------
+
+sql> CREATE OR REPLACE PROCEDURE REC_INSUPD
+(
+     P_EMPNO NUMBER,
+     P_ENAME VARCHAR2,
+     P_SAL NUMBER
+)
+IS
+
+     V_COUNT NUMBER;
+
+BEGIN
+
+     IF CHECK_SAL(P_SAL) THEN
+
+          SELECT COUNT(*)
+          INTO V_COUNT
+          FROM EMP
+          WHERE EMPNO=P_EMPNO;
+
+          IF V_COUNT=0 THEN
+
+               INSERT INTO EMP
+               (EMPNO,ENAME,SAL)
+               VALUES
+               (P_EMPNO,P_ENAME,P_SAL);
+
+               DBMS_OUTPUT.PUT_LINE
+               ('Employee Inserted.');
+
+          ELSE
+
+               UPDATE EMP
+               SET ENAME=P_ENAME,
+                   SAL=P_SAL
+               WHERE EMPNO=P_EMPNO;
+
+               DBMS_OUTPUT.PUT_LINE
+               ('Employee Updated.');
+
+          END IF;
+
+          COMMIT;
+
+     ELSE
+
+          DBMS_OUTPUT.PUT_LINE
+          ('Salary is greater than Average Salary.');
+
+     END IF;
+
+END;
+/
+
+Output:
+-------
+
+Procedure created.
+
+
+Execute:
+--------
+
+sql> EXEC REC_INSUPD(9001,'JOHN',1500);
+
+Output:
+-------
+
+Employee Inserted.
+
+PL/SQL procedure successfully completed.
+
+
+Another Execution:
+------------------
+
+sql> EXEC REC_INSUPD(9002,'DAVID',7000);
+
+Output:
+-------
+
+Salary is greater than Average Salary.
+
+PL/SQL procedure successfully completed.
+
+====================================================================
+====================================================================
+ 7
+Create a Function CAL_LDATE that returns the employee's joining
+date in the format:
+DAY, MONTH DD, YYYY
+Return the date in GERMAN language.
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE OR REPLACE FUNCTION CAL_LDATE
+(
+     P_EMPNO NUMBER
+)
+RETURN VARCHAR2
+IS
+
+     V_HDATE DATE;
+
+BEGIN
+
+     SELECT HIREDATE
+     INTO V_HDATE
+     FROM EMP
+     WHERE EMPNO=P_EMPNO;
+
+     RETURN TO_CHAR
+     (
+          V_HDATE,
+          'DAY, MONTH DD, YYYY',
+          'NLS_DATE_LANGUAGE=GERMAN'
+     );
+
+EXCEPTION
+
+     WHEN NO_DATA_FOUND THEN
+          RETURN 'EMPLOYEE NOT FOUND';
+
+END;
+/
+
+Output:
+-------
+
+Function created.
+
+
+Execute:
+--------
+
+sql> SELECT CAL_LDATE(7788) AS JOIN_DATE
+     FROM DUAL;
+
+Output:
+-------
+
+JOIN_DATE
+-----------------------------------------
+SAMSTAG, APRIL 19, 1987
+
+
+====================================================================
+ASSIGNMENT 8
+Create a Function CAL_WORDS that converts a numeric value
+into Words.
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE OR REPLACE FUNCTION CAL_WORDS
+(
+     P_NUM NUMBER
+)
+RETURN VARCHAR2
+IS
+BEGIN
+
+     RETURN TO_CHAR
+     (
+          TO_DATE(P_NUM,'J'),
+          'JSP'
+     );
+
+END;
+/
+
+Output:
+-------
+
+Function created.
+
+
+Execute:
+--------
+
+sql> SELECT CAL_WORDS(125)
+     FROM DUAL;
+
+Output:
+-------
+
+CAL_WORDS(125)
+------------------------------
+ONE HUNDRED TWENTY-FIVE
+
+
+Another Example:
+----------------
+
+sql> SELECT CAL_WORDS(999)
+     FROM DUAL;
+
+Output:
+-------
+
+NINE HUNDRED NINETY-NINE
+
+
+====================================================================
+ 9
+Wrap the Function GET_JOB and test it using USER_SOURCE.
+====================================================================
+
+Step 1:
+-------
+
+Save the function in a file named GET_JOB.SQL.
+
+Example:
+
+sql> CREATE OR REPLACE FUNCTION GET_JOB
+(
+     P_EMPNO NUMBER
+)
+RETURN VARCHAR2
+IS
+
+     V_JOB EMP.JOB%TYPE;
+
+BEGIN
+
+     SELECT JOB
+     INTO V_JOB
+     FROM EMP
+     WHERE EMPNO=P_EMPNO;
+
+     RETURN V_JOB;
+
+END;
+/
+
+Output:
+-------
+
+Function created.
+
+
+Step 2:
+-------
+
+Go to Command Prompt and execute:
+
+wrap iname=GET_JOB.sql
+oname=GET_JOB_WRAP.sql
+
+Output:
+-------
+
+PL/SQL Wrapper: Release ...
+
+Processing GET_JOB.sql
+
+Wrapped successfully.
+
+
+Step 3:
+-------
+
+Execute the wrapped file.
+
+sql> @GET_JOB_WRAP.sql
+
+Output:
+-------
+
+Function created.
+
+
+Step 4:
+-------
+
+Verify that the source code is wrapped.
+
+sql> SELECT NAME,
+            TYPE,
+            TEXT
+     FROM USER_SOURCE
+     WHERE NAME='GET_JOB';
+
+Output:
+-------
+
+NAME     TYPE      TEXT
+-------  --------  -----------------------------------------
+GET_JOB  FUNCTION  wrapped
+GET_JOB  FUNCTION  a000000
+GET_JOB  FUNCTION  abcd1234...
+GET_JOB  FUNCTION  ...
+(Encrypted/Wrapped Source)
+
+Step 5:
+-------
+
+Test the wrapped function.
+
+sql> VARIABLE TITLE VARCHAR2(35)
+
+sql> EXEC :TITLE:=GET_JOB(7788);
+
+PL/SQL procedure successfully completed.
+
+sql> PRINT TITLE
+
+Output:
+-------
+
+TITLE
+------------------------
+ANALYST
+
+====================================================================
