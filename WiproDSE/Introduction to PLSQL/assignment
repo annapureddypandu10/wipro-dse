@@ -1,0 +1,56 @@
+====================================================================
+ASSIGNMENT 1
+Write a program that displays the Net Salary (SAL + COMM) of an
+employee entered at run time from EMP table.
+(Use NVL Function)
+====================================================================
+
+SQL Command:
+------------
+
+sql> ACCEPT P_EMPNO PROMPT 'Enter Employee Number : '
+
+sql> SELECT EMPNO,
+            ENAME,
+            SAL,
+            COMM,
+            SAL + NVL(COMM,0) AS NETSAL
+     FROM EMP
+     WHERE EMPNO='&P_EMPNO';
+
+Sample Input:
+-------------
+
+Enter Employee Number : 7499
+
+Output:
+-------
+
+EMPNO   ENAME   SAL    COMM   NETSAL
+------  ------  -----  -----  ------
+7499    ALLEN   1600    300    1900
+
+
+Another Example:
+----------------
+
+Enter Employee Number : 7369
+
+Output:
+-------
+
+EMPNO   ENAME   SAL    COMM   NETSAL
+------  ------  -----  -----  ------
+7369    SMITH    800    NULL    800
+
+====================================================================
+
+Explanation:
+------------
+NVL(COMM,0) replaces NULL commission values with 0.
+
+Formula:
+NETSAL = SAL + NVL(COMM,0)
+
+If COMM is NULL, Oracle treats it as 0 while calculating NETSAL.
+====================================================================
