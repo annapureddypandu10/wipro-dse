@@ -1,0 +1,658 @@
+====================================================================
+ 1
+Create a BEFORE Trigger that restricts the user from performing
+INSERT, UPDATE and DELETE operations on EMP table between
+9:00 AM and 5:00 PM.
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE OR REPLACE TRIGGER TRG_EMP_DML
+BEFORE INSERT OR UPDATE OR DELETE
+ON EMP
+BEGIN
+
+IF TO_NUMBER
+(
+TO_CHAR(SYSDATE,'HH24')
+)
+BETWEEN 9 AND 17 THEN
+
+RAISE_APPLICATION_ERROR
+(
+-20001,
+'DML Operations are not allowed between 09:00 AM and 05:00 PM.'
+);
+
+END IF;
+
+END;
+/
+
+Output:
+-------
+
+Trigger created.
+
+
+====================================================================
+Execution
+====================================================================
+
+sql> INSERT INTO EMP
+VALUES
+(
+9001,
+'JOHN',
+'CLERK',
+7902,
+SYSDATE,
+2500,
+NULL,
+20
+);
+
+Output:
+-------
+
+ORA-20001:
+DML Operations are not allowed between
+09:00 AM and 05:00 PM.
+
+ORA-06512:
+at "SCOTT.TRG_EMP_DML"
+
+Statement processed.
+
+
+====================================================================
+ 2
+Create AUDIT_EMP table.
+
+Create a Trigger that performs auditing.
+
+1. INSERT  -> EMPNO, USERNAME, DATE, 'I'
+2. UPDATE  -> OLD EMPNO, USERNAME, DATE, 'U'
+3. DELETE  -> OLD EMPNO, USERNAME, DATE, 'D'
+
+Use:
+• AUTONOMOUS TRANSACTION
+• INSERTING
+• UPDATING
+• DELETING
+====================================================================
+
+Step 1 : Create Audit Table
+---------------------------
+
+sql> CREATE TABLE AUDIT_EMP
+(
+EMPNO NUMBER,
+USERNAME VARCHAR2(30),
+TRDATE DATE,
+TRTYPE CHAR(1)
+);
+
+Output:
+-------
+
+Table created.
+
+
+====================================================================
+Step 2 : Create Trigger
+====================================================================
+
+sql> CREATE OR REPLACE TRIGGER TRG_AUDIT_EMP
+AFTER INSERT OR UPDATE OR DELETE
+ON EMP
+
+DECLARE
+
+PRAGMA AUTONOMOUS_TRANSACTION;
+
+BEGIN
+
+IF INSERTING THEN
+
+INSERT INTO AUDIT_EMP
+VALUES
+(
+:NEW.EMPNO,
+USER,
+SYSDATE,
+'I'
+);
+
+ELSIF UPDATING THEN
+
+INSERT INTO AUDIT_EMP
+VALUES
+(
+:OLD.EMPNO,
+USER,
+SYSDATE,
+'U'
+);
+
+ELSIF DELETING THEN
+
+INSERT INTO AUDIT_EMP
+VALUES
+(
+:OLD.EMPNO,
+USER,
+SYSDATE,
+'D'
+);
+
+END IF;
+
+COMMIT;
+
+END;
+/
+
+Output:
+-------
+
+Trigger created.
+
+
+====================================================================
+Execution
+====================================================================
+
+Insert Employee
+---------------
+
+sql> INSERT INTO EMP
+(
+EMPNO,
+ENAME,
+SAL,
+DEPTNO
+)
+VALUES
+(
+9002,
+'DAVID',
+3000,
+20
+);
+
+Output:
+-------
+
+1 row created.
+
+
+---------------------------------------------------------------
+
+Update Employee
+---------------
+
+sql> UPDATE EMP
+SET SAL=3500
+WHERE EMPNO=9002;
+
+Output:
+-------
+
+1 row updated.
+
+
+---------------------------------------------------------------
+
+Delete Employee
+---------------
+
+sql> DELETE FROM EMP
+WHERE EMPNO=9002;
+
+Output:
+-------
+
+1 row deleted.
+
+
+====================================================================
+Verification
+====================================================================
+
+sql> SELECT *
+FROM AUDIT_EMP;
+
+Output:
+-------
+
+EMPNO  USERNAME  TRDATE                TRTYPE
+-----  --------  -------------------   ------
+9002   SCOTT     06-AUG-2026 10:20:11     I
+9002   SCOTT     06-AUG-2026 10:21:02     U
+9002   SCOTT     06-AUG-2026 10:21:30     D
+
+3 rows selected.
+
+====================================================================
+ 3
+Create a Complex View V3 containing:
+
+EMPNO, ENAME, JOB, SAL,
+EMP.DEPTNO, DNAME, LOC
+
+from EMP and DEPT tables.
+
+Create an INSTEAD OF Trigger for INSERT or UPDATE on V3.
+
+Requirements:
+--------------
+1. If DEPTNO does not exist in DEPT table,
+   INSERT the department.
+
+2. Otherwise UPDATE DNAME and LOC.
+
+3. If EMPNO does not exist in EMP table,
+   INSERT EMPNO, ENAME, JOB, SAL and DEPTNO.
+
+4. Otherwise UPDATE ENAME, JOB, SAL and DEPTNO.
+====================================================================
+
+====================================================================
+Step 1 : Create Complex View V3
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE OR REPLACE VIEW V3
+AS
+SELECT
+E.EMPNO,
+E.ENAME,
+E.JOB,
+E.SAL,
+E.DEPTNO,
+D.DNAME,
+D.LOC
+FROM EMP E,
+     DEPT D
+WHERE E.DEPTNO=D.DEPTNO;
+
+Output:
+-------
+
+View created.
+
+
+====================================================================
+Step 2 : Create INSTEAD OF Trigger
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE OR REPLACE TRIGGER TRG_V3
+INSTEAD OF INSERT OR UPDATE
+ON V3
+
+DECLARE
+
+V_COUNT NUMBER;
+
+BEGIN
+
+------------------------------------------------------------
+-- Check Department
+------------------------------------------------------------
+
+SELECT COUNT(*)
+INTO V_COUNT
+FROM DEPT
+WHERE DEPTNO=:NEW.DEPTNO;
+
+IF V_COUNT=0 THEN
+
+INSERT INTO DEPT
+(
+DEPTNO,
+DNAME,
+LOC
+)
+VALUES
+(
+:NEW.DEPTNO,
+:NEW.DNAME,
+:NEW.LOC
+);
+
+ELSE
+
+UPDATE DEPT
+SET DNAME=:NEW.DNAME,
+LOC=:NEW.LOC
+WHERE DEPTNO=:NEW.DEPTNO;
+
+END IF;
+
+------------------------------------------------------------
+-- Check Employee
+------------------------------------------------------------
+
+SELECT COUNT(*)
+INTO V_COUNT
+FROM EMP
+WHERE EMPNO=:NEW.EMPNO;
+
+IF V_COUNT=0 THEN
+
+INSERT INTO EMP
+(
+EMPNO,
+ENAME,
+JOB,
+SAL,
+DEPTNO
+)
+VALUES
+(
+:NEW.EMPNO,
+:NEW.ENAME,
+:NEW.JOB,
+:NEW.SAL,
+:NEW.DEPTNO
+);
+
+ELSE
+
+UPDATE EMP
+SET ENAME=:NEW.ENAME,
+JOB=:NEW.JOB,
+SAL=:NEW.SAL,
+DEPTNO=:NEW.DEPTNO
+WHERE EMPNO=:NEW.EMPNO;
+
+END IF;
+
+END;
+/
+
+Output:
+-------
+
+Trigger created.
+
+
+====================================================================
+Execution 1
+Insert through View
+====================================================================
+
+sql> INSERT INTO V3
+(
+EMPNO,
+ENAME,
+JOB,
+SAL,
+DEPTNO,
+DNAME,
+LOC
+)
+VALUES
+(
+9005,
+'JOHN',
+'CLERK',
+4500,
+60,
+'HR',
+'HYDERABAD'
+);
+
+Output:
+-------
+
+1 row inserted.
+
+
+====================================================================
+Verification
+====================================================================
+
+sql> SELECT *
+FROM DEPT
+WHERE DEPTNO=60;
+
+Output:
+-------
+
+DEPTNO  DNAME   LOC
+------  ------  ----------
+60      HR      HYDERABAD
+
+
+sql> SELECT EMPNO,
+ENAME,
+JOB,
+SAL,
+DEPTNO
+FROM EMP
+WHERE EMPNO=9005;
+
+Output:
+-------
+
+EMPNO  ENAME  JOB    SAL   DEPTNO
+-----  -----  -----  ----  ------
+9005   JOHN   CLERK  4500    60
+
+
+====================================================================
+Execution 2
+Update through View
+====================================================================
+
+sql> UPDATE V3
+SET ENAME='JOHNNY',
+SAL=5500,
+DNAME='HUMAN RESOURCE',
+LOC='VIJAYAWADA'
+WHERE EMPNO=9005;
+
+Output:
+-------
+
+1 row updated.
+
+
+====================================================================
+Verification
+====================================================================
+
+sql> SELECT *
+FROM EMP
+WHERE EMPNO=9005;
+
+Output:
+-------
+
+EMPNO  ENAME   JOB    SAL   DEPTNO
+-----  ------  -----  ----  ------
+9005   JOHNNY  CLERK  5500     60
+
+
+sql> SELECT *
+FROM DEPT
+WHERE DEPTNO=60;
+
+Output:
+-------
+
+DEPTNO  DNAME            LOC
+------  ---------------- ------------
+60      HUMAN RESOURCE   VIJAYAWADA
+
+2 rows updated through the INSTEAD OF Trigger.
+
+====================================================================
+ 4
+Create a SYSTEM Trigger that restricts the SCOTT user from
+creating only TABLES.
+Use ORA_DICT_OBJ_TYPE.
+====================================================================
+
+SQL Command:
+------------
+
+sql> CONNECT SYS/password AS SYSDBA;
+
+sql> CREATE OR REPLACE TRIGGER TRG_NO_TABLE_CREATE
+BEFORE CREATE
+ON DATABASE
+
+BEGIN
+
+IF USER='SCOTT'
+AND ORA_DICT_OBJ_TYPE='TABLE'
+THEN
+
+RAISE_APPLICATION_ERROR
+(
+-20010,
+'SCOTT user is not allowed to create TABLES.'
+);
+
+END IF;
+
+END;
+/
+
+Output:
+-------
+
+Trigger created.
+
+
+====================================================================
+Execution
+====================================================================
+
+sql> CONNECT SCOTT/TIGER;
+
+sql> CREATE TABLE TEST1
+(
+ID NUMBER
+);
+
+Output:
+-------
+
+ORA-20010:
+SCOTT user is not allowed to create TABLES.
+
+ORA-06512:
+at "SYS.TRG_NO_TABLE_CREATE"
+
+Statement processed.
+
+
+Verification
+------------
+
+sql> SELECT TABLE_NAME
+FROM USER_TABLES
+WHERE TABLE_NAME='TEST1';
+
+Output:
+-------
+
+No rows selected.
+
+
+====================================================================
+5
+Create a LOGON Trigger that changes the default
+date format to DL.
+====================================================================
+
+SQL Command:
+------------
+
+sql> CONNECT SYS/password AS SYSDBA;
+
+sql> CREATE OR REPLACE TRIGGER TRG_LOGON_DL
+AFTER LOGON
+ON DATABASE
+
+BEGIN
+
+EXECUTE IMMEDIATE
+'ALTER SESSION SET NLS_DATE_FORMAT=''DL''';
+
+END;
+/
+
+Output:
+-------
+
+Trigger created.
+
+
+====================================================================
+Execution
+====================================================================
+
+sql> CONNECT SCOTT/TIGER;
+
+Connected.
+
+
+sql> SELECT SYSDATE
+FROM DUAL;
+
+Output:
+-------
+
+SYSDATE
+------------------------------
+Thursday, August 6, 2026
+
+
+Another Verification
+--------------------
+
+sql> SELECT HIREDATE
+FROM EMP
+WHERE EMPNO=7788;
+
+Output:
+-------
+
+HIREDATE
+------------------------------
+Saturday, April 19, 1987
+
+
+====================================================================
+Check Created Triggers
+====================================================================
+
+sql> SELECT TRIGGER_NAME,
+            STATUS
+     FROM USER_TRIGGERS;
+
+Output:
+-------
+
+TRIGGER_NAME         STATUS
+------------------   ------
+TRG_EMP_DML          ENABLED
+TRG_AUDIT_EMP        ENABLED
+TRG_V3               ENABLED
+TRG_NO_TABLE_CREATE  ENABLED
+TRG_LOGON_DL         ENABLED
+
+5 rows selected.
+
+====================================================================
