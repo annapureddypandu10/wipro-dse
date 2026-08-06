@@ -1,0 +1,352 @@
+====================================================================
+ 1
+Create a table MESSAGES with a column RESULT of type
+VARCHAR2(1000).
+
+Write a PL/SQL program that prompts for SAL and gets the
+corresponding ENAME from EMP table.
+Do not use Explicit Cursors.
+
+If one row is returned      -> Insert ENAME||' '||SAL
+If more than one row        -> Insert 'More than one employee with salary <>'
+If no row is returned       -> Insert 'No Employee with salary <>'
+Any other error             -> Insert 'Other Error'
+
+Use Named Exception Handlers.
+====================================================================
+
+Create Table:
+-------------
+
+sql> CREATE TABLE MESSAGES
+     (
+         RESULT VARCHAR2(1000)
+     );
+
+Output:
+-------
+
+Table created.
+
+
+PL/SQL Program:
+---------------
+
+sql> SET SERVEROUTPUT ON;
+
+sql> ACCEPT P_SAL PROMPT 'Enter Salary : '
+
+sql> DECLARE
+
+V_ENAME EMP.ENAME%TYPE;
+
+BEGIN
+
+SELECT ENAME
+INTO V_ENAME
+FROM EMP
+WHERE SAL=&P_SAL;
+
+INSERT INTO MESSAGES
+VALUES(V_ENAME||' '||&P_SAL);
+
+EXCEPTION
+
+WHEN TOO_MANY_ROWS THEN
+
+INSERT INTO MESSAGES
+VALUES('More than one employee with salary '||&P_SAL);
+
+WHEN NO_DATA_FOUND THEN
+
+INSERT INTO MESSAGES
+VALUES('No Employee with salary '||&P_SAL);
+
+WHEN OTHERS THEN
+
+INSERT INTO MESSAGES
+VALUES('Other Error');
+
+END;
+/
+
+Output (Salary = 3000):
+-----------------------
+
+PL/SQL procedure successfully completed.
+
+
+Verify:
+-------
+
+sql> SELECT * FROM MESSAGES;
+
+RESULT
+------------------------------------------
+More than one employee with salary 3000
+
+
+Output (Salary = 5000):
+-----------------------
+
+RESULT
+------------------------------------------
+KING 5000
+
+
+Output (Salary = 7000):
+-----------------------
+
+RESULT
+------------------------------------------
+No Employee with salary 7000
+
+
+====================================================================
+ 2
+Write a PL/SQL program that prompts for EMPNO, ENAME and SAL
+and inserts them into EMP table.
+Use Unnamed System Defined Exception Handler.
+====================================================================
+
+SQL Command:
+------------
+
+sql> ACCEPT P_EMPNO PROMPT 'Enter Employee Number : '
+sql> ACCEPT P_ENAME PROMPT 'Enter Employee Name   : '
+sql> ACCEPT P_SAL PROMPT 'Enter Salary          : '
+
+sql> BEGIN
+
+INSERT INTO EMP
+(EMPNO,ENAME,SAL)
+VALUES
+(&P_EMPNO,'&P_ENAME',&P_SAL);
+
+COMMIT;
+
+DBMS_OUTPUT.PUT_LINE('Employee Inserted.');
+
+EXCEPTION
+
+WHEN OTHERS THEN
+
+DBMS_OUTPUT.PUT_LINE
+('System Error : '||SQLERRM);
+
+END;
+/
+
+Output:
+-------
+
+Enter Employee Number : 7369
+Enter Employee Name   : TEST
+Enter Salary          : 5000
+
+System Error :
+ORA-00001: unique constraint violated
+
+PL/SQL procedure successfully completed.
+
+
+====================================================================
+ 3
+Write a PL/SQL program that prompts for EMPNO and deletes
+the employee from EMP table.
+Handle using User Defined Exception.
+====================================================================
+
+SQL Command:
+------------
+
+sql> ACCEPT P_EMPNO PROMPT 'Enter Employee Number : '
+
+sql> DECLARE
+
+EMP_NOT_FOUND EXCEPTION;
+
+BEGIN
+
+DELETE FROM EMP
+WHERE EMPNO=&P_EMPNO;
+
+IF SQL%ROWCOUNT=0 THEN
+RAISE EMP_NOT_FOUND;
+END IF;
+
+COMMIT;
+
+DBMS_OUTPUT.PUT_LINE('Employee Deleted.');
+
+EXCEPTION
+
+WHEN EMP_NOT_FOUND THEN
+
+DBMS_OUTPUT.PUT_LINE
+('Employee Number Not Found.');
+
+END;
+/
+
+Output (Valid EMPNO):
+---------------------
+
+Enter Employee Number : 7900
+
+Employee Deleted.
+
+PL/SQL procedure successfully completed.
+
+
+Output (Invalid EMPNO):
+-----------------------
+
+Enter Employee Number : 9999
+
+Employee Number Not Found.
+
+PL/SQL procedure successfully completed.
+
+
+====================================================================
+ 4
+Create STOCK table with columns:
+PNO, PNAME, RATE, TR_QTY
+
+Insert records.
+
+Write a PL/SQL block that accepts
+PNO, TR_TYPE and TR_QTY.
+
+TR_TYPE='R'
+Update Quantity = Old Qty + New Qty
+
+TR_TYPE='I'
+Update Quantity = Old Qty - New Qty
+
+Handle User Defined Exceptions.
+====================================================================
+
+Create Table:
+-------------
+
+sql> CREATE TABLE STOCK
+(
+PNO NUMBER PRIMARY KEY,
+PNAME VARCHAR2(30),
+RATE NUMBER(8,2),
+TR_QTY NUMBER
+);
+
+Output:
+-------
+
+Table created.
+
+
+Insert Records:
+---------------
+
+sql> INSERT INTO STOCK VALUES(101,'MOUSE',500,50);
+sql> INSERT INTO STOCK VALUES(102,'KEYBOARD',800,40);
+sql> INSERT INTO STOCK VALUES(103,'MONITOR',12000,15);
+
+sql> COMMIT;
+
+Output:
+-------
+
+Commit complete.
+
+
+PL/SQL Program:
+---------------
+
+sql> ACCEPT P_PNO PROMPT 'Enter Product Number : '
+sql> ACCEPT P_TYPE PROMPT 'Enter Transaction Type (R/I) : '
+sql> ACCEPT P_QTY PROMPT 'Enter Transaction Quantity : '
+
+sql> DECLARE
+
+INVALID_PRODUCT EXCEPTION;
+INVALID_TYPE EXCEPTION;
+
+V_COUNT NUMBER;
+
+BEGIN
+
+SELECT COUNT(*)
+INTO V_COUNT
+FROM STOCK
+WHERE PNO=&P_PNO;
+
+IF V_COUNT=0 THEN
+RAISE INVALID_PRODUCT;
+END IF;
+
+IF UPPER('&P_TYPE')='R' THEN
+
+UPDATE STOCK
+SET TR_QTY=TR_QTY+&P_QTY
+WHERE PNO=&P_PNO;
+
+ELSIF UPPER('&P_TYPE')='I' THEN
+
+UPDATE STOCK
+SET TR_QTY=TR_QTY-&P_QTY
+WHERE PNO=&P_PNO;
+
+ELSE
+
+RAISE INVALID_TYPE;
+
+END IF;
+
+COMMIT;
+
+DBMS_OUTPUT.PUT_LINE
+('Stock Updated Successfully.');
+
+EXCEPTION
+
+WHEN INVALID_PRODUCT THEN
+
+DBMS_OUTPUT.PUT_LINE
+('Invalid Product Number.');
+
+WHEN INVALID_TYPE THEN
+
+DBMS_OUTPUT.PUT_LINE
+('Invalid Transaction Type.');
+
+END;
+/
+
+Output:
+-------
+
+Enter Product Number : 101
+Enter Transaction Type (R/I) : R
+Enter Transaction Quantity : 25
+
+Stock Updated Successfully.
+
+PL/SQL procedure successfully completed.
+
+
+Verify:
+-------
+
+sql> SELECT * FROM STOCK;
+
+Output:
+-------
+
+PNO   PNAME      RATE     TR_QTY
+----  ---------  -------  ------
+101   MOUSE        500       75
+102   KEYBOARD     800       40
+103   MONITOR    12000       15
+
+====================================================================
