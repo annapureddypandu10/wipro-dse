@@ -1,0 +1,54 @@
+sql> SET SERVEROUTPUT ON;
+
+====================================================================
+ASSIGNMENT
+Write a PL/SQL program that displays the entire row by passing
+the EMPNO.
+(Use %ROWTYPE)
+====================================================================
+
+SQL Command:
+------------
+
+sql> ACCEPT P_EMPNO PROMPT 'Enter Employee Number : '
+
+sql> DECLARE
+
+       V_EMP EMP%ROWTYPE;
+
+     BEGIN
+
+       SELECT *
+       INTO V_EMP
+       FROM EMP
+       WHERE EMPNO=&P_EMPNO;
+
+       DBMS_OUTPUT.PUT_LINE('Employee Number : '||V_EMP.EMPNO);
+       DBMS_OUTPUT.PUT_LINE('Employee Name   : '||V_EMP.ENAME);
+       DBMS_OUTPUT.PUT_LINE('Job             : '||V_EMP.JOB);
+       DBMS_OUTPUT.PUT_LINE('Manager         : '||V_EMP.MGR);
+       DBMS_OUTPUT.PUT_LINE('Hire Date       : '||V_EMP.HIREDATE);
+       DBMS_OUTPUT.PUT_LINE('Salary          : '||V_EMP.SAL);
+       DBMS_OUTPUT.PUT_LINE('Commission      : '||NVL(V_EMP.COMM,0));
+       DBMS_OUTPUT.PUT_LINE('Department No   : '||V_EMP.DEPTNO);
+
+     END;
+     /
+
+Output:
+-------
+
+Enter Employee Number : 7788
+
+Employee Number : 7788
+Employee Name   : SCOTT
+Job             : ANALYST
+Manager         : 7566
+Hire Date       : 19-APR-87
+Salary          : 3000
+Commission      : 0
+Department No   : 20
+
+PL/SQL procedure successfully completed.
+
+====================================================================
