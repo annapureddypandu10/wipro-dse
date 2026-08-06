@@ -1,0 +1,169 @@
+====================================================================
+ 1
+Create a Procedure to accept an EMPNO as an input parameter and
+display the ENAME, SAL and DEPTNO.
+====================================================================
+
+SQL Command:
+------------
+
+sql> SET SERVEROUTPUT ON;
+
+sql> CREATE OR REPLACE PROCEDURE EMP_DETAILS
+(
+     P_EMPNO IN EMP.EMPNO%TYPE
+)
+IS
+     V_ENAME  EMP.ENAME%TYPE;
+     V_SAL    EMP.SAL%TYPE;
+     V_DEPTNO EMP.DEPTNO%TYPE;
+BEGIN
+
+     SELECT ENAME,SAL,DEPTNO
+     INTO V_ENAME,V_SAL,V_DEPTNO
+     FROM EMP
+     WHERE EMPNO=P_EMPNO;
+
+     DBMS_OUTPUT.PUT_LINE('Employee Name : '||V_ENAME);
+     DBMS_OUTPUT.PUT_LINE('Salary        : '||V_SAL);
+     DBMS_OUTPUT.PUT_LINE('Department No : '||V_DEPTNO);
+
+EXCEPTION
+
+     WHEN NO_DATA_FOUND THEN
+          DBMS_OUTPUT.PUT_LINE('Employee Not Found.');
+
+END;
+/
+
+Output:
+-------
+
+Procedure created.
+
+
+Execute:
+--------
+
+sql> EXEC EMP_DETAILS(7788);
+
+Output:
+-------
+
+Employee Name : SCOTT
+Salary        : 3000
+Department No : 20
+
+PL/SQL procedure successfully completed.
+
+
+====================================================================
+ 2
+Create a Function ADD_NUM() that accepts two NUMBER parameters
+and returns the addition result.
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE OR REPLACE FUNCTION ADD_NUM
+(
+     A NUMBER,
+     B NUMBER
+)
+RETURN NUMBER
+IS
+     C NUMBER;
+BEGIN
+
+     C:=A+B;
+
+     RETURN C;
+
+END;
+/
+
+Output:
+-------
+
+Function created.
+
+
+Execute:
+--------
+
+sql> SELECT ADD_NUM(25,35) AS RESULT
+     FROM DUAL;
+
+Output:
+-------
+
+RESULT
+------
+60
+
+
+====================================================================
+ 3
+Create a Procedure that displays all Procedure and Function
+names from the current schema by querying USER_SOURCE table
+using an Explicit Cursor.
+====================================================================
+
+SQL Command:
+------------
+
+sql> SET SERVEROUTPUT ON;
+
+sql> CREATE OR REPLACE PROCEDURE LIST_OBJECTS
+IS
+
+CURSOR C1 IS
+SELECT DISTINCT NAME,TYPE
+FROM USER_SOURCE
+WHERE TYPE IN ('PROCEDURE','FUNCTION')
+ORDER BY TYPE,NAME;
+
+V_NAME USER_SOURCE.NAME%TYPE;
+V_TYPE USER_SOURCE.TYPE%TYPE;
+
+BEGIN
+
+OPEN C1;
+
+LOOP
+
+FETCH C1 INTO V_NAME,V_TYPE;
+
+EXIT WHEN C1%NOTFOUND;
+
+DBMS_OUTPUT.PUT_LINE(V_TYPE||' : '||V_NAME);
+
+END LOOP;
+
+CLOSE C1;
+
+END;
+/
+
+Output:
+-------
+
+Procedure created.
+
+
+Execute:
+--------
+
+sql> EXEC LIST_OBJECTS;
+
+Output:
+-------
+
+FUNCTION : ADD_NUM
+PROCEDURE : EMP_DETAILS
+PROCEDURE : LIST_OBJECTS
+
+PL/SQL procedure successfully completed.
+
+====================================================================
