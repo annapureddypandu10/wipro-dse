@@ -1,0 +1,769 @@
+====================================================================
+ 1
+Create EMPTEST from EMP table by copying structure and data.
+(Create with Sub Query)
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE TABLE EMPTEST
+     AS
+     SELECT *
+     FROM EMP;
+
+Output:
+-------
+
+Table created.
+
+
+Verify:
+-------
+
+sql> SELECT * FROM EMPTEST;
+
+Output:
+-------
+
+14 rows selected.
+
+
+====================================================================
+ 2
+Add a new row into the EMPTEST table for EMPNO, ENAME, SAL columns.
+ENAME should have the Current User.
+====================================================================
+
+SQL Command:
+------------
+
+sql> INSERT INTO EMPTEST (EMPNO, ENAME, SAL)
+     VALUES (8000, USER, 6000);
+
+Output:
+-------
+
+1 row created.
+
+
+Verify:
+-------
+
+sql> SELECT EMPNO, ENAME, SAL
+     FROM EMPTEST
+     WHERE EMPNO=8000;
+
+Output:
+-------
+
+EMPNO   ENAME        SAL
+------  ---------   -----
+8000    SCOTT       6000
+
+(Note: ENAME displays the current Oracle username. It may vary on your system.)
+
+
+====================================================================
+ 3
+Update EMPTEST by increasing the salary of TURNER by 15%.
+Confirm your changes.
+====================================================================
+
+SQL Command:
+------------
+
+sql> UPDATE EMPTEST
+     SET SAL=SAL*1.15
+     WHERE ENAME='TURNER';
+
+Output:
+-------
+
+1 row updated.
+
+
+Verify:
+-------
+
+sql> SELECT EMPNO,ENAME,SAL
+     FROM EMPTEST
+     WHERE ENAME='TURNER';
+
+Output:
+-------
+
+EMPNO   ENAME    SAL
+------  -------  ------
+7844    TURNER   1725
+
+
+====================================================================
+ 4
+Update the salary of SMITH with the salary of SCOTT using EMPTEST.
+====================================================================
+
+SQL Command:
+------------
+
+sql> UPDATE EMPTEST
+     SET SAL=
+     (
+         SELECT SAL
+         FROM EMPTEST
+         WHERE ENAME='SCOTT'
+     )
+     WHERE ENAME='SMITH';
+
+Output:
+-------
+
+1 row updated.
+
+
+Verify:
+-------
+
+sql> SELECT ENAME,SAL
+     FROM EMPTEST
+     WHERE ENAME IN('SMITH','SCOTT');
+
+Output:
+-------
+
+ENAME    SAL
+-------  ----
+SMITH    3000
+SCOTT    3000
+
+
+====================================================================
+ 5
+Increase all employees' salary by 10% in EMPTEST who are
+working in NEW YORK.
+(Update with Sub Query)
+====================================================================
+
+SQL Command:
+------------
+
+sql> UPDATE EMPTEST
+     SET SAL=SAL*1.10
+     WHERE DEPTNO=
+     (
+         SELECT DEPTNO
+         FROM DEPT
+         WHERE LOC='NEW YORK'
+     );
+
+Output:
+-------
+
+3 rows updated.
+
+
+Verify:
+-------
+
+sql> SELECT ENAME,SAL
+     FROM EMPTEST
+     WHERE DEPTNO=10;
+
+Output:
+-------
+
+ENAME     SAL
+--------   -------
+CLARK      2695
+KING       5500
+MILLER     1430
+
+
+====================================================================
+ 6
+Delete all COMM data from EMPTEST table.
+====================================================================
+
+SQL Command:
+------------
+
+sql> UPDATE EMPTEST
+     SET COMM=NULL;
+
+Output:
+-------
+
+15 rows updated.
+
+
+Verify:
+-------
+
+sql> SELECT ENAME,COMM
+     FROM EMPTEST;
+
+Output:
+-------
+
+COMM column contains NULL values for all employees.
+
+
+====================================================================
+ 7
+Delete all employees from EMPTEST table who are working
+in SALES department.
+(Delete with Sub Query)
+====================================================================
+
+SQL Command:
+------------
+
+sql> DELETE FROM EMPTEST
+     WHERE DEPTNO=
+     (
+         SELECT DEPTNO
+         FROM DEPT
+         WHERE DNAME='SALES'
+     );
+
+Output:
+-------
+
+6 rows deleted.
+
+
+Verify:
+-------
+
+sql> SELECT EMPNO,ENAME,DEPTNO
+     FROM EMPTEST
+     WHERE DEPTNO=30;
+
+Output:
+-------
+
+No rows selected.
+
+
+====================================================================
+ 8
+Delete all employees who are working with a given employee,
+except that employee.
+(Prompt for ENAME)
+====================================================================
+
+SQL Command:
+------------
+
+sql> ACCEPT P_ENAME PROMPT 'Enter Employee Name : '
+
+sql> DELETE FROM EMPTEST
+     WHERE DEPTNO=
+     (
+         SELECT DEPTNO
+         FROM EMPTEST
+         WHERE ENAME='&P_ENAME'
+     )
+     AND ENAME<>'&P_ENAME';
+
+Sample Input:
+-------------
+
+Enter Employee Name : SCOTT
+
+Output:
+-------
+
+4 rows deleted.
+
+
+====================================================================
+ 9
+Create EMP2 from EMP by copying only EMPNO, ENAME, SAL
+without copying data.
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE TABLE EMP2
+     AS
+     SELECT EMPNO,
+            ENAME,
+            SAL
+     FROM EMP
+     WHERE 1=2;
+
+Output:
+-------
+
+Table created.
+
+
+====================================================================
+10
+Create EMP3 from EMP by copying only EMPNO, JOB
+without copying data.
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE TABLE EMP3
+     AS
+     SELECT EMPNO,
+            JOB
+     FROM EMP
+     WHERE 1=2;
+
+Output:
+-------
+
+Table created.
+
+
+====================================================================
+ 11
+Using Multi-table Insert insert EMP data into EMP2 and EMP3.
+====================================================================
+
+SQL Command:
+------------
+
+sql> INSERT ALL
+     INTO EMP2(EMPNO,ENAME,SAL)
+     VALUES(EMPNO,ENAME,SAL)
+
+     INTO EMP3(EMPNO,JOB)
+     VALUES(EMPNO,JOB)
+
+     SELECT EMPNO,
+            ENAME,
+            SAL,
+            JOB
+     FROM EMP;
+
+Output:
+-------
+
+14 rows created.
+
+
+Verify:
+-------
+
+sql> SELECT COUNT(*) FROM EMP2;
+
+COUNT(*)
+--------
+14
+
+sql> SELECT COUNT(*) FROM EMP3;
+
+COUNT(*)
+--------
+14
+
+
+====================================================================
+ 12
+Truncate EMP2 table and insert the following two rows:
+7788, SMITH, 4500
+7654, JACK, 3500
+====================================================================
+
+SQL Command:
+------------
+
+sql> TRUNCATE TABLE EMP2;
+
+Output:
+-------
+
+Table truncated.
+
+
+sql> INSERT INTO EMP2
+     VALUES(7788,'SMITH',4500);
+
+Output:
+-------
+
+1 row created.
+
+
+sql> INSERT INTO EMP2
+     VALUES(7654,'JACK',3500);
+
+Output:
+-------
+
+1 row created.
+
+
+Verify:
+-------
+
+sql> SELECT * FROM EMP2;
+
+Output:
+-------
+
+EMPNO   ENAME    SAL
+------  -------  ----
+7788    SMITH    4500
+7654    JACK     3500
+
+
+====================================================================
+ 13
+Commit the Data.
+====================================================================
+
+SQL Command:
+------------
+
+sql> COMMIT;
+
+Output:
+-------
+
+Commit complete.
+
+====================================================================
+ 14
+Using MERGE statement insert and update EMP2 using EMP.
+(MERGE Statement)
+====================================================================
+
+SQL Command:
+------------
+
+sql> MERGE INTO EMP2 E2
+     USING EMP E
+     ON (E2.EMPNO = E.EMPNO)
+
+     WHEN MATCHED THEN
+     UPDATE SET
+     E2.ENAME = E.ENAME,
+     E2.SAL   = E.SAL
+
+     WHEN NOT MATCHED THEN
+     INSERT (EMPNO,ENAME,SAL)
+     VALUES(E.EMPNO,E.ENAME,E.SAL);
+
+Output:
+-------
+
+14 rows merged.
+
+
+====================================================================
+ 15
+Verify your changes.
+(SELECT Statement)
+====================================================================
+
+SQL Command:
+------------
+
+sql> SELECT *
+     FROM EMP2
+     ORDER BY EMPNO;
+
+Output:
+-------
+
+EMPNO  ENAME    SAL
+-----  -------  ----
+7369   SMITH     800
+7499   ALLEN    1600
+7521   WARD     1250
+7566   JONES    2975
+7654   MARTIN   1250
+7698   BLAKE    2850
+7782   CLARK    2450
+7788   SCOTT    3000
+7839   KING     5000
+7844   TURNER   1500
+7876   ADAMS    1100
+7900   JAMES     950
+7902   FORD     3000
+7934   MILLER   1300
+
+14 rows selected.
+
+
+====================================================================
+ 16
+Rollback the Data.
+====================================================================
+
+SQL Command:
+------------
+
+sql> ROLLBACK;
+
+Output:
+-------
+
+Rollback complete.
+
+
+====================================================================
+ 17
+Using MERGE statement update EMP2 table only for EMPNO=7788
+and insert only those employees whose salary is more than 3000.
+====================================================================
+
+SQL Command:
+------------
+
+sql> MERGE INTO EMP2 E2
+     USING
+     (
+         SELECT *
+         FROM EMP
+         WHERE EMPNO=7788
+            OR SAL>3000
+     ) E
+     ON(E2.EMPNO=E.EMPNO)
+
+     WHEN MATCHED THEN
+     UPDATE SET
+     E2.ENAME=E.ENAME,
+     E2.SAL=E.SAL
+
+     WHEN NOT MATCHED THEN
+     INSERT(EMPNO,ENAME,SAL)
+     VALUES(E.EMPNO,E.ENAME,E.SAL);
+
+Output:
+-------
+
+2 rows merged.
+
+
+====================================================================
+ 18
+Verify your changes.
+(SELECT Statement)
+====================================================================
+
+SQL Command:
+------------
+
+sql> SELECT *
+     FROM EMP2
+     WHERE EMPNO=7788
+        OR SAL>3000;
+
+Output:
+-------
+
+EMPNO   ENAME    SAL
+------  -------  ----
+7788    SCOTT    3000
+7839    KING     5000
+
+
+====================================================================
+ 19
+Create a User WIPRO.
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE USER WIPRO
+     IDENTIFIED BY WIPRO;
+
+Output:
+-------
+
+User created.
+
+
+====================================================================
+ 20
+Grant ALL permission on EMP table from SCOTT to WIPRO user.
+====================================================================
+
+SQL Command:
+------------
+
+sql> GRANT ALL
+     ON EMP
+     TO WIPRO;
+
+Output:
+-------
+
+Grant succeeded.
+
+
+====================================================================
+ 21
+Delete all the employees in DEPTNO=10 and do not issue COMMIT.
+====================================================================
+
+SQL Command:
+------------
+
+sql> DELETE FROM EMP
+     WHERE DEPTNO=10;
+
+Output:
+-------
+
+3 rows deleted.
+
+(Note: Do NOT issue COMMIT.)
+
+
+====================================================================
+ 22
+From WIPRO user delete all the employees from SCOTT.EMP
+table in DEPTNO=10. What happens and Why?
+====================================================================
+
+SQL Command:
+------------
+
+sql> DELETE FROM SCOTT.EMP
+     WHERE DEPTNO=10;
+
+Output:
+-------
+
+ORA-00054: resource busy and acquire with NOWAIT specified
+or timeout expired.
+
+Reason:
+-------
+
+The SCOTT user has already locked the rows by deleting them
+without issuing COMMIT or ROLLBACK.
+Therefore WIPRO cannot modify the same rows until the lock
+is released.
+
+
+====================================================================
+ 23
+Issue a ROLLBACK in SCOTT user and check the WIPRO user.
+====================================================================
+
+SQL Command (SCOTT):
+--------------------
+
+sql> ROLLBACK;
+
+Output:
+-------
+
+Rollback complete.
+
+
+Now check from WIPRO:
+
+sql> SELECT *
+     FROM SCOTT.EMP
+     WHERE DEPTNO=10;
+
+Output:
+-------
+
+EMPNO  ENAME    JOB        DEPTNO
+-----  -------  ---------  ------
+7782   CLARK    MANAGER      10
+7839   KING     PRESIDENT    10
+7934   MILLER   CLERK        10
+
+3 rows selected.
+
+
+====================================================================
+ 24
+In SCOTT user give a query on EMP using FOR UPDATE clause
+with WAIT 20 seconds.
+====================================================================
+
+SQL Command:
+------------
+
+sql> SELECT *
+     FROM EMP
+     WHERE DEPTNO=10
+     FOR UPDATE WAIT 20;
+
+Output:
+-------
+
+3 rows selected.
+
+The rows are locked for update.
+
+If another user tries to modify them, Oracle waits
+for 20 seconds before giving an error.
+
+
+====================================================================
+ 25
+In WIPRO user issue a ROLLBACK and now check in SCOTT user.
+====================================================================
+
+SQL Command (WIPRO):
+--------------------
+
+sql> ROLLBACK;
+
+Output:
+-------
+
+Rollback complete.
+
+
+SCOTT Verification:
+-------------------
+
+sql> SELECT *
+     FROM EMP
+     WHERE DEPTNO=10;
+
+Output:
+-------
+
+EMPNO  ENAME    JOB        DEPTNO
+-----  -------  ---------  ------
+7782   CLARK    MANAGER      10
+7839   KING     PRESIDENT    10
+7934   MILLER   CLERK        10
+
+3 rows selected.
+
+
+====================================================================
+ 26
+Rollback all the transactions in SCOTT and WIPRO users.
+====================================================================
+
+SQL Command (SCOTT):
+--------------------
+
+sql> ROLLBACK;
+
+Output:
+-------
+
+Rollback complete.
+
+
+SQL Command (WIPRO):
+--------------------
+
+sql> ROLLBACK;
+
+Output:
+-------
+
+Rollback complete.
