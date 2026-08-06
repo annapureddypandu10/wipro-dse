@@ -1,0 +1,915 @@
+====================================================================
+ 1
+Create a Procedure ADD_DEPT.
+This procedure takes three IN parameters:
+DEPTNO, DNAME and LOC.
+Insert these values into DEPT table.
+Handle duplicate DEPTNO using User Defined Exception.
+====================================================================
+
+SQL Command:
+------------
+
+sql> SET SERVEROUTPUT ON;
+
+sql> CREATE OR REPLACE PROCEDURE ADD_DEPT
+(
+P_DEPTNO IN DEPT.DEPTNO%TYPE,
+P_DNAME  IN DEPT.DNAME%TYPE,
+P_LOC    IN DEPT.LOC%TYPE
+)
+IS
+
+DUP_DEPT EXCEPTION;
+V_COUNT NUMBER;
+
+BEGIN
+
+SELECT COUNT(*)
+INTO V_COUNT
+FROM DEPT
+WHERE DEPTNO=P_DEPTNO;
+
+IF V_COUNT>0 THEN
+RAISE DUP_DEPT;
+END IF;
+
+INSERT INTO DEPT
+VALUES(P_DEPTNO,P_DNAME,P_LOC);
+
+COMMIT;
+
+DBMS_OUTPUT.PUT_LINE('Department Inserted Successfully.');
+
+EXCEPTION
+
+WHEN DUP_DEPT THEN
+DBMS_OUTPUT.PUT_LINE('Duplicate Department Number.');
+
+END;
+/
+
+Output:
+-------
+
+Procedure created.
+
+
+Execute:
+--------
+
+sql> EXEC ADD_DEPT(50,'HR','HYDERABAD');
+
+Output:
+-------
+
+Department Inserted Successfully.
+
+PL/SQL procedure successfully completed.
+
+
+====================================================================
+ 2
+Create a Procedure UPDATE_DEPT.
+Update DNAME and LOC for the given DEPTNO.
+Handle exception when DEPTNO does not exist.
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE OR REPLACE PROCEDURE UPDATE_DEPT
+(
+P_DEPTNO IN DEPT.DEPTNO%TYPE,
+P_DNAME  IN DEPT.DNAME%TYPE,
+P_LOC    IN DEPT.LOC%TYPE
+)
+IS
+
+INVALID_DEPT EXCEPTION;
+
+BEGIN
+
+UPDATE DEPT
+SET DNAME=P_DNAME,
+LOC=P_LOC
+WHERE DEPTNO=P_DEPTNO;
+
+IF SQL%ROWCOUNT=0 THEN
+RAISE INVALID_DEPT;
+END IF;
+
+COMMIT;
+
+DBMS_OUTPUT.PUT_LINE('Department Updated.');
+
+EXCEPTION
+
+WHEN INVALID_DEPT THEN
+
+DBMS_OUTPUT.PUT_LINE('Department Number Not Found.');
+
+END;
+/
+
+Output:
+-------
+
+Procedure created.
+
+
+Execute:
+--------
+
+sql> EXEC UPDATE_DEPT(50,'FINANCE','MUMBAI');
+
+Output:
+-------
+
+Department Updated.
+
+PL/SQL procedure successfully completed.
+
+
+====================================================================
+ 3
+Create a Procedure DELETE_DEPT.
+Delete the department for the given DEPTNO.
+Handle exception when DEPTNO does not exist.
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE OR REPLACE PROCEDURE DELETE_DEPT
+(
+P_DEPTNO IN DEPT.DEPTNO%TYPE
+)
+IS
+
+INVALID_DEPT EXCEPTION;
+
+BEGIN
+
+DELETE FROM DEPT
+WHERE DEPTNO=P_DEPTNO;
+
+IF SQL%ROWCOUNT=0 THEN
+RAISE INVALID_DEPT;
+END IF;
+
+COMMIT;
+
+DBMS_OUTPUT.PUT_LINE('Department Deleted.');
+
+EXCEPTION
+
+WHEN INVALID_DEPT THEN
+
+DBMS_OUTPUT.PUT_LINE('Department Number Not Found.');
+
+END;
+/
+
+Output:
+-------
+
+Procedure created.
+
+
+Execute:
+--------
+
+sql> EXEC DELETE_DEPT(50);
+
+Output:
+-------
+
+Department Deleted.
+
+PL/SQL procedure successfully completed.
+
+
+====================================================================
+ 4
+Create a user WIPRO.
+Modify ADD_DEPT procedure to accept CURRENT_USER as IN parameter.
+Grant EXECUTE permission on ADD_DEPT to WIPRO.
+Create DEPT table in WIPRO schema.
+Execute procedure from WIPRO and verify that the department is
+added only in WIPRO schema.
+====================================================================
+
+Step 1: Create User
+-------------------
+
+sql> CREATE USER WIPRO
+IDENTIFIED BY WIPRO;
+
+Output:
+-------
+
+User created.
+
+
+Step 2: Grant Privileges
+------------------------
+
+sql> GRANT CONNECT,RESOURCE TO WIPRO;
+
+Output:
+-------
+
+Grant succeeded.
+
+
+Step 3: Create DEPT Table in WIPRO
+----------------------------------
+
+sql> CONNECT WIPRO/WIPRO
+
+sql> CREATE TABLE DEPT
+(
+DEPTNO NUMBER(2) PRIMARY KEY,
+DNAME VARCHAR2(20),
+LOC VARCHAR2(20)
+);
+
+Output:
+-------
+
+Table created.
+
+
+Step 4: Modified Procedure
+--------------------------
+
+sql> CONNECT SCOTT/TIGER
+
+sql> CREATE OR REPLACE PROCEDURE ADD_DEPT
+(
+P_USER   IN VARCHAR2,
+P_DEPTNO IN NUMBER,
+P_DNAME  IN VARCHAR2,
+P_LOC    IN VARCHAR2
+)
+IS
+BEGIN
+
+EXECUTE IMMEDIATE
+'INSERT INTO '||P_USER||
+'.DEPT VALUES(:1,:2,:3)'
+USING P_DEPTNO,P_DNAME,P_LOC;
+
+COMMIT;
+
+DBMS_OUTPUT.PUT_LINE
+('Department Added.');
+
+END;
+/
+
+Output:
+-------
+
+Procedure created.
+
+
+Step 5: Grant Execute
+---------------------
+
+sql> GRANT EXECUTE
+ON ADD_DEPT
+TO WIPRO;
+
+Output:
+-------
+
+Grant succeeded.
+
+
+Step 6: Execute from WIPRO
+--------------------------
+
+sql> CONNECT WIPRO/WIPRO
+
+sql> EXEC SCOTT.ADD_DEPT('WIPRO',60,'IT','VIJAYAWADA');
+
+Output:
+-------
+
+Department Added.
+
+PL/SQL procedure successfully completed.
+
+
+Verification
+------------
+
+sql> SELECT *
+FROM DEPT;
+
+Output:
+-------
+
+DEPTNO  DNAME   LOC
+------  ------  ----------
+60      IT      VIJAYAWADA
+
+
+Check SCOTT Table
+-----------------
+
+sql> CONNECT SCOTT/TIGER
+
+sql> SELECT *
+FROM DEPT
+WHERE DEPTNO=60;
+
+Output:
+-------
+
+No rows selected.
+
+====================================================================
+ 5
+Modify the DEPT table by adding a new column X.
+Check the STATUS of ADD_DEPT, UPDATE_DEPT and DELETE_DEPT.
+Recompile the procedures to make them VALID.
+Drop column X.
+====================================================================
+
+Step 1: Add Column X
+--------------------
+
+sql> ALTER TABLE DEPT
+     ADD X VARCHAR2(10);
+
+Output:
+-------
+
+Table altered.
+
+
+Step 2: Check Procedure Status
+------------------------------
+
+sql> SELECT OBJECT_NAME,
+            STATUS
+     FROM USER_OBJECTS
+     WHERE OBJECT_TYPE='PROCEDURE'
+     AND OBJECT_NAME IN
+     ('ADD_DEPT','UPDATE_DEPT','DELETE_DEPT');
+
+Output:
+-------
+
+OBJECT_NAME      STATUS
+---------------  --------
+ADD_DEPT         INVALID
+UPDATE_DEPT      INVALID
+DELETE_DEPT      INVALID
+
+
+Step 3: Recompile Procedures
+----------------------------
+
+sql> ALTER PROCEDURE ADD_DEPT COMPILE;
+
+Output:
+-------
+
+Procedure altered.
+
+
+sql> ALTER PROCEDURE UPDATE_DEPT COMPILE;
+
+Output:
+-------
+
+Procedure altered.
+
+
+sql> ALTER PROCEDURE DELETE_DEPT COMPILE;
+
+Output:
+-------
+
+Procedure altered.
+
+
+Step 4: Check Status Again
+--------------------------
+
+sql> SELECT OBJECT_NAME,
+            STATUS
+     FROM USER_OBJECTS
+     WHERE OBJECT_TYPE='PROCEDURE'
+     AND OBJECT_NAME IN
+     ('ADD_DEPT','UPDATE_DEPT','DELETE_DEPT');
+
+Output:
+-------
+
+OBJECT_NAME      STATUS
+---------------  ------
+ADD_DEPT         VALID
+UPDATE_DEPT      VALID
+DELETE_DEPT      VALID
+
+
+Step 5: Drop Column X
+---------------------
+
+sql> ALTER TABLE DEPT
+     DROP COLUMN X;
+
+Output:
+-------
+
+Table altered.
+
+
+====================================================================
+ 6
+Wrap the ADD_DEPT Procedure and test it.
+====================================================================
+
+Step 1:
+--------
+
+Create ADD_DEPT.sql file.
+
+sql> CREATE OR REPLACE PROCEDURE ADD_DEPT
+(
+P_DEPTNO NUMBER,
+P_DNAME VARCHAR2,
+P_LOC VARCHAR2
+)
+IS
+BEGIN
+
+INSERT INTO DEPT
+VALUES(P_DEPTNO,P_DNAME,P_LOC);
+
+COMMIT;
+
+END;
+/
+
+Output:
+-------
+
+Procedure created.
+
+
+Step 2:
+--------
+
+At Command Prompt
+
+wrap iname=ADD_DEPT.sql
+oname=ADD_DEPT_WRAP.sql
+
+Output:
+-------
+
+PL/SQL Wrapper: Release ...
+
+Processing ADD_DEPT.sql
+Wrapped successfully.
+
+
+Step 3:
+--------
+
+sql> @ADD_DEPT_WRAP.sql
+
+Output:
+-------
+
+Procedure created.
+
+
+Step 4:
+--------
+
+sql> EXEC ADD_DEPT(70,'ADMIN','GUNTUR');
+
+Output:
+-------
+
+PL/SQL procedure successfully completed.
+
+
+Verify:
+-------
+
+sql> SELECT *
+FROM DEPT
+WHERE DEPTNO=70;
+
+Output:
+-------
+
+DEPTNO  DNAME  LOC
+------  -----  --------
+70      ADMIN  GUNTUR
+
+
+====================================================================
+ 7
+Create a Procedure that inserts employees of a given DEPTNO into
+EMP_TEST table and updates their salary by 20% in EMP table.
+
+Use:
+• Parameter Cursor
+• FOR LOOP Cursor
+• FOR UPDATE clause
+====================================================================
+
+Create EMP_TEST
+---------------
+
+sql> CREATE TABLE EMP_TEST
+AS
+SELECT *
+FROM EMP
+WHERE 1=2;
+
+Output:
+-------
+
+Table created.
+
+
+Procedure
+---------
+
+sql> CREATE OR REPLACE PROCEDURE COPY_UPDATE_EMP
+(
+P_DEPTNO NUMBER
+)
+IS
+
+CURSOR C1(PNO NUMBER)
+IS
+SELECT *
+FROM EMP
+WHERE DEPTNO=PNO
+FOR UPDATE;
+
+BEGIN
+
+FOR R IN C1(P_DEPTNO)
+LOOP
+
+INSERT INTO EMP_TEST
+VALUES
+(
+R.EMPNO,
+R.ENAME,
+R.JOB,
+R.MGR,
+R.HIREDATE,
+R.SAL,
+R.COMM,
+R.DEPTNO
+);
+
+UPDATE EMP
+SET SAL=SAL*1.20
+WHERE CURRENT OF C1;
+
+END LOOP;
+
+COMMIT;
+
+DBMS_OUTPUT.PUT_LINE
+('Employees Copied and Salary Updated.');
+
+END;
+/
+
+Output:
+-------
+
+Procedure created.
+
+
+Execute
+-------
+
+sql> EXEC COPY_UPDATE_EMP(20);
+
+Output:
+-------
+
+Employees Copied and Salary Updated.
+
+PL/SQL procedure successfully completed.
+
+
+Verify EMP_TEST
+---------------
+
+sql> SELECT EMPNO,
+ENAME,
+SAL
+FROM EMP_TEST;
+
+Output:
+-------
+
+EMPNO  ENAME   SAL
+-----  ------  ----
+7369   SMITH    800
+7566   JONES   2975
+7788   SCOTT   3000
+7876   ADAMS   1100
+7902   FORD    3000
+
+
+Verify EMP
+----------
+
+sql> SELECT EMPNO,
+ENAME,
+SAL
+FROM EMP
+WHERE DEPTNO=20;
+
+Output:
+-------
+
+EMPNO  ENAME   SAL
+-----  ------  ----
+7369   SMITH    960
+7566   JONES   3570
+7788   SCOTT   3600
+7876   ADAMS   1320
+7902   FORD    3600
+
+====================================================================
+ 8
+Create a Procedure that deletes all employees from EMP table
+for a given DEPTNO and inserts those employees into TEST table.
+
+Use:
+• Parameter Cursor
+• FOR LOOP Cursor
+• FOR UPDATE clause
+====================================================================
+
+Create TEST Table
+-----------------
+
+sql> CREATE TABLE TEST
+     AS
+     SELECT *
+     FROM EMP
+     WHERE 1=2;
+
+Output:
+-------
+
+Table created.
+
+
+Procedure:
+----------
+
+sql> SET SERVEROUTPUT ON;
+
+sql> CREATE OR REPLACE PROCEDURE MOVE_EMP
+(
+     P_DEPTNO NUMBER
+)
+IS
+
+CURSOR C1(PNO NUMBER) IS
+SELECT *
+FROM EMP
+WHERE DEPTNO=PNO
+FOR UPDATE;
+
+BEGIN
+
+FOR R IN C1(P_DEPTNO)
+LOOP
+
+INSERT INTO TEST
+VALUES
+(
+R.EMPNO,
+R.ENAME,
+R.JOB,
+R.MGR,
+R.HIREDATE,
+R.SAL,
+R.COMM,
+R.DEPTNO
+);
+
+DELETE FROM EMP
+WHERE CURRENT OF C1;
+
+END LOOP;
+
+COMMIT;
+
+DBMS_OUTPUT.PUT_LINE
+('Employees Moved Successfully.');
+
+END;
+/
+
+Output:
+-------
+
+Procedure created.
+
+
+Execute:
+--------
+
+sql> EXEC MOVE_EMP(30);
+
+Output:
+-------
+
+Employees Moved Successfully.
+
+PL/SQL procedure successfully completed.
+
+
+Verify:
+-------
+
+sql> SELECT EMPNO,ENAME
+FROM TEST;
+
+Output:
+-------
+
+EMPNO   ENAME
+------  -------
+7499    ALLEN
+7521    WARD
+7654    MARTIN
+7698    BLAKE
+7844    TURNER
+7900    JAMES
+
+
+sql> SELECT *
+FROM EMP
+WHERE DEPTNO=30;
+
+Output:
+-------
+
+No rows selected.
+
+
+====================================================================
+ 9
+Create a Procedure GET_EMP that accepts
+EMPNO (IN),
+ENAME (OUT),
+SAL (OUT).
+
+Handle the required exceptions.
+Call the procedure using SQL*Plus session variables.
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE OR REPLACE PROCEDURE GET_EMP
+(
+     P_EMPNO IN EMP.EMPNO%TYPE,
+     P_ENAME OUT EMP.ENAME%TYPE,
+     P_SAL   OUT EMP.SAL%TYPE
+)
+IS
+BEGIN
+
+     SELECT ENAME,SAL
+     INTO P_ENAME,P_SAL
+     FROM EMP
+     WHERE EMPNO=P_EMPNO;
+
+EXCEPTION
+
+     WHEN NO_DATA_FOUND THEN
+          P_ENAME:='NOT FOUND';
+          P_SAL:=0;
+
+     WHEN OTHERS THEN
+          P_ENAME:='ERROR';
+          P_SAL:=0;
+
+END;
+/
+
+Output:
+-------
+
+Procedure created.
+
+
+Execute:
+--------
+
+sql> VARIABLE V_ENAME VARCHAR2(30)
+
+sql> VARIABLE V_SAL NUMBER
+
+sql> EXEC GET_EMP(7788,:V_ENAME,:V_SAL);
+
+Output:
+-------
+
+PL/SQL procedure successfully completed.
+
+
+Display Variables:
+------------------
+
+sql> PRINT V_ENAME
+
+Output:
+-------
+
+V_ENAME
+-------------------
+SCOTT
+
+
+sql> PRINT V_SAL
+
+Output:
+-------
+
+V_SAL
+-----
+3000
+
+
+====================================================================
+ASSIGNMENT 10
+Write a Procedure that takes an IN OUT Mobile Number.
+Pass Mobile Number as 9999999999.
+Return it in the format (999)999-9999.
+====================================================================
+
+SQL Command:
+------------
+
+sql> CREATE OR REPLACE PROCEDURE FORMAT_MOBILE
+(
+     P_MOBILE IN OUT VARCHAR2
+)
+IS
+BEGIN
+
+     P_MOBILE :=
+     '('||SUBSTR(P_MOBILE,1,3)||')'||
+     SUBSTR(P_MOBILE,4,3)||'-'||
+     SUBSTR(P_MOBILE,7,4);
+
+END;
+/
+
+Output:
+-------
+
+Procedure created.
+
+
+Execute:
+--------
+
+sql> VARIABLE MOB VARCHAR2(20)
+
+sql> EXEC :MOB:='9999999999';
+
+PL/SQL procedure successfully completed.
+
+
+sql> EXEC FORMAT_MOBILE(:MOB);
+
+PL/SQL procedure successfully completed.
+
+
+sql> PRINT MOB
+
+Output:
+-------
+
+MOB
+----------------
+(999)999-9999
+
+====================================================================
