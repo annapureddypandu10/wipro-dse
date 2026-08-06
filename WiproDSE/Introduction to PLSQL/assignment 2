@@ -1,0 +1,248 @@
+
+================================================================
+ 1
+Write a PL/SQL program that prompts for EMPNO, ENAME and SAL.
+If EMPNO does not exist in EMP table then INSERT the record.
+Otherwise UPDATE ENAME and SAL for that EMPNO.
+(Control Structures)
+====================================================================
+
+SQL Command:
+------------
+
+sql> ACCEPT P_EMPNO PROMPT 'Enter Employee Number : '
+sql> ACCEPT P_ENAME PROMPT 'Enter Employee Name   : '
+sql> ACCEPT P_SAL   PROMPT 'Enter Salary          : '
+
+sql> DECLARE
+       V_COUNT NUMBER;
+     BEGIN
+       SELECT COUNT(*)
+       INTO V_COUNT
+       FROM EMP
+       WHERE EMPNO=&P_EMPNO;
+
+       IF V_COUNT=0 THEN
+          INSERT INTO EMP(EMPNO,ENAME,SAL)
+          VALUES(&P_EMPNO,'&P_ENAME',&P_SAL);
+
+          DBMS_OUTPUT.PUT_LINE('Employee Inserted.');
+
+       ELSE
+
+          UPDATE EMP
+          SET ENAME='&P_ENAME',
+              SAL=&P_SAL
+          WHERE EMPNO=&P_EMPNO;
+
+          DBMS_OUTPUT.PUT_LINE('Employee Updated.');
+
+       END IF;
+
+       COMMIT;
+     END;
+     /
+
+Output (Case-1):
+----------------
+
+Enter Employee Number : 8001
+Enter Employee Name   : JACK
+Enter Salary          : 6500
+
+Employee Inserted.
+
+PL/SQL procedure successfully completed.
+
+
+Output (Case-2):
+----------------
+
+Enter Employee Number : 7369
+Enter Employee Name   : SMITH
+Enter Salary          : 5000
+
+Employee Updated.
+
+PL/SQL procedure successfully completed.
+
+
+====================================================================
+ 2
+Write a PL/SQL program that prompts for a number and displays
+whether it is ODD or EVEN.
+(Control Structures)
+====================================================================
+
+SQL Command:
+------------
+
+sql> ACCEPT P_NUM PROMPT 'Enter a Number : '
+
+sql> DECLARE
+       N NUMBER:=&P_NUM;
+     BEGIN
+
+       IF MOD(N,2)=0 THEN
+          DBMS_OUTPUT.PUT_LINE('EVEN NUMBER');
+       ELSE
+          DBMS_OUTPUT.PUT_LINE('ODD NUMBER');
+       END IF;
+
+     END;
+     /
+
+Output:
+-------
+
+Enter a Number : 25
+
+ODD NUMBER
+
+PL/SQL procedure successfully completed.
+
+
+Another Output:
+---------------
+
+Enter a Number : 100
+
+EVEN NUMBER
+
+PL/SQL procedure successfully completed.
+
+
+====================================================================
+ 3
+Write a PL/SQL program that prompts for EMPNO and updates
+salary based on the following conditions:
+
+DEPTNO=10  -> Salary +10%
+DEPTNO=20  -> Salary +15%
+Other Dept -> Salary = Salary + COMM
+(Control Structures)
+====================================================================
+
+SQL Command:
+------------
+
+sql> ACCEPT P_EMPNO PROMPT 'Enter Employee Number : '
+
+sql> DECLARE
+
+       V_DEPTNO EMP.DEPTNO%TYPE;
+
+     BEGIN
+
+       SELECT DEPTNO
+       INTO V_DEPTNO
+       FROM EMP
+       WHERE EMPNO=&P_EMPNO;
+
+       IF V_DEPTNO=10 THEN
+
+          UPDATE EMP
+          SET SAL=SAL*1.10
+          WHERE EMPNO=&P_EMPNO;
+
+       ELSIF V_DEPTNO=20 THEN
+
+          UPDATE EMP
+          SET SAL=SAL*1.15
+          WHERE EMPNO=&P_EMPNO;
+
+       ELSE
+
+          UPDATE EMP
+          SET SAL=SAL+NVL(COMM,0)
+          WHERE EMPNO=&P_EMPNO;
+
+       END IF;
+
+       COMMIT;
+
+       DBMS_OUTPUT.PUT_LINE('Salary Updated.');
+
+     END;
+     /
+
+Output:
+-------
+
+Enter Employee Number : 7782
+
+Salary Updated.
+
+PL/SQL procedure successfully completed.
+
+
+====================================================================
+ 4
+Create MYTABLE1 with RESULT column and write a PL/SQL program
+to insert values from 1 to 10 except 6 and 8.
+(Control Structures)
+====================================================================
+
+Create Table:
+-------------
+
+sql> CREATE TABLE MYTABLE1
+     (
+         RESULT NUMBER
+     );
+
+Output:
+-------
+
+Table created.
+
+
+PL/SQL Program:
+---------------
+
+sql> BEGIN
+
+       FOR I IN 1..10 LOOP
+
+          IF I=6 OR I=8 THEN
+             CONTINUE;
+          END IF;
+
+          INSERT INTO MYTABLE1
+          VALUES(I);
+
+       END LOOP;
+
+       COMMIT;
+
+     END;
+     /
+
+Output:
+-------
+
+PL/SQL procedure successfully completed.
+
+
+Verify:
+-------
+
+sql> SELECT * FROM MYTABLE1;
+
+Output:
+-------
+
+RESULT
+------
+1
+2
+3
+4
+5
+7
+9
+10
+
+8 rows selected.
+
+====================================================================
