@@ -1,0 +1,110 @@
+====================================================================
+ASSIGNMENT 1
+Use the DEPTREE view to generate all the dependencies
+for DEPT table.
+====================================================================
+
+SQL Command:
+------------
+
+Step 1 : Run the DEPTREE Script
+-------------------------------
+
+sql> CONNECT SYS/password AS SYSDBA;
+
+sql> @?/rdbms/admin/utldtree.sql
+
+Output:
+-------
+
+Table created.
+View created.
+Procedure created.
+
+(Note: This script creates the DEPTREE_TEMPTAB table,
+DEPTREE view and IDEPTREE view.)
+
+
+====================================================================
+Step 2 : Execute the DEPTREE_FILL Procedure
+====================================================================
+
+SQL Command:
+------------
+
+sql> EXEC DEPTREE_FILL('TABLE','SCOTT','DEPT');
+
+Output:
+-------
+
+PL/SQL procedure successfully completed.
+
+
+====================================================================
+Step 3 : Display Dependencies
+====================================================================
+
+SQL Command:
+------------
+
+sql> SELECT NESTED_LEVEL,
+            TYPE,
+            SCHEMA,
+            NAME
+     FROM DEPTREE
+     ORDER BY SEQ#;
+
+Output:
+-------
+
+NESTED_LEVEL   TYPE        SCHEMA   NAME
+------------   ----------  -------  ----------------
+0              TABLE       SCOTT    DEPT
+1              VIEW        SCOTT    V3
+1              PROCEDURE   SCOTT    ADD_DEPT
+1              PROCEDURE   SCOTT    UPDATE_DEPT
+1              PROCEDURE   SCOTT    DELETE_DEPT
+1              PACKAGE     SCOTT    PK1
+1              PACKAGE     SCOTT    PK2
+1              PACKAGE     SCOTT    PK3
+1              TRIGGER     SCOTT    TRG_V3
+
+9 rows selected.
+
+
+====================================================================
+Alternative Query
+====================================================================
+
+sql> SELECT *
+     FROM DEPTREE;
+
+Output:
+-------
+
+Displays the complete dependency hierarchy of the DEPT table,
+including all dependent Views, Procedures, Packages,
+Functions and Triggers.
+
+
+====================================================================
+Explanation
+====================================================================
+
+The DEPTREE utility is an Oracle supplied utility used to
+display object dependencies.
+
+The procedure DEPTREE_FILL populates the DEPTREE view with
+dependency information for a specified object.
+
+Syntax:
+-------
+
+EXEC DEPTREE_FILL('OBJECT_TYPE','OWNER','OBJECT_NAME');
+
+Example:
+--------
+
+EXEC DEPTREE_FILL('TABLE','SCOTT','DEPT');
+
+====================================================================
